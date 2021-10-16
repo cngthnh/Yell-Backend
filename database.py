@@ -1,7 +1,6 @@
-import sqlalchemy
 import os
 
-def init():
+def getUri():
     db_user = 'yell-backend'
     db_pass = '8SA46Wil8iEJt|9]z'
     db_name = 'yell'
@@ -14,18 +13,12 @@ def init():
     elif len(host_args) == 2:
         db_hostname, db_port = host_args[0], int(host_args[1])
 
-    engine = sqlalchemy.create_engine(
-        '{}://{}:{}@{}:{}/{}'.format(
+    URI = '{}://{}:{}@{}:{}/{}?charset={}'.format(
             "postgresql+pg8000",
             db_user,
             db_pass,
             db_hostname,
             db_port,
-            db_name
-        ),
-        pool_size=5,
-        max_overflow=2,
-        pool_timeout=30,
-        pool_recycle=1800
-    )
-    return engine
+            db_name,
+            'utf8')
+    return URI

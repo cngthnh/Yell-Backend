@@ -3,6 +3,9 @@ import cipher
 import os
 from functools import wraps
 import database
+import secrets
+from flask_sqlalchemy import SQLAlchemy
+from db_objects import *
 
 app = Flask(__name__)
 
@@ -10,8 +13,9 @@ app = Flask(__name__)
 cipher.loadKeys()
 
 # init SQL database connect
-engine = database.init()
-engine.connect()
+app.config['SQLALCHEMY_DATABASE_URI'] = database.getUri()
+app.config['SECRET_KEY'] = secrets.token_hex(16)
+db = SQLAlchemy(app)
 
 def tokenRequired(func):
     @wraps(func)
@@ -44,6 +48,12 @@ def getToken():
 @tokenRequired
 def authorized():
     return jsonify(message='AUTHORIZED'), 200
+
+@app.route('/api/signup', methods=['GET'])
+def createAccount():
+    user = User('cngthnh', '19120374@gmail.com', 'Vu Cong Thanh', 'thisisahashstring')
+    db.session.add(user)
+    db.session.commit()
     
 if __name__ == '__main__':
     app.run(ssl_context='adhoc', host='0.0.0.0', port=os.environ.get('PORT', 80))
