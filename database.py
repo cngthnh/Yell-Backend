@@ -2,13 +2,6 @@ import sqlalchemy
 import os
 
 def init():
-    db_config = {
-            "pool_size": 5,
-            "max_overflow": 2,
-            "pool_timeout": 30, 
-            "pool_recycle": 1800,
-        }
-
     db_user = 'yell-backend'
     db_pass = '8SA46Wil8iEJt|9]z'
     db_name = 'yell'
@@ -30,6 +23,9 @@ def init():
             port=db_port,
             database=db_name
         ),
-        **db_config
+        pool_size=5,
+        max_overflow=2,
+        pool_timeout=30,
+        pool_recycle=1800
     )
     return engine
