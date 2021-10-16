@@ -7,8 +7,8 @@ from jose.utils import base64url_decode
 
 from jose.constants import ALGORITHMS
 
-YELL_ENC_KEY = None
-YELL_SIG_KEY = None
+YELL_ENC_KEY
+YELL_SIG_KEY
 YELL_ISSUER = 'Yell App by Yellion'
 
 def loadKeys():

@@ -15,13 +15,13 @@ def init():
         db_hostname, db_port = host_args[0], int(host_args[1])
 
     engine = sqlalchemy.create_engine(
-        sqlalchemy.engine.url.URL.create(
-            drivername="postgresql+pg8000",
-            username=db_user,
-            password=db_pass,
-            host=db_hostname,
-            port=db_port,
-            database=db_name
+        '{}://{}:{}@{}:{}/{}'.format(
+            "postgresql+pg8000",
+            db_user,
+            db_pass,
+            db_hostname,
+            db_port,
+            db_name
         ),
         pool_size=5,
         max_overflow=2,
