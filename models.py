@@ -1,4 +1,4 @@
-from yell_backend import db
+from database import db
 
 class User(db.Model):
     id = db.Column(db.String(20), primary_key=True)

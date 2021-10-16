@@ -1,6 +1,7 @@
 import os
+from flask_sqlalchemy import SQLAlchemy
 
-def getUri():
+def getDbUri():
     db_user = 'yell-backend'
     db_pass = '8SA46Wil8iEJt|9]z'
     db_name = 'yell'
@@ -22,3 +23,5 @@ def getUri():
             db_name,
             'utf8')
     return URI
+
+db = SQLAlchemy()

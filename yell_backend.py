@@ -2,20 +2,25 @@ from flask import Flask, request, jsonify
 import cipher
 import os
 from functools import wraps
-import database
 import secrets
-from flask_sqlalchemy import SQLAlchemy
-from db_objects import *
+
 
 app = Flask(__name__)
+
+from database import db, getDbUri
+
+# init SQL database connect
+app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
+app.config['SECRET_KEY'] = secrets.token_hex(16)
+
+db.init_app(app)
+
+from models import *
 
 # load keys for signing and encrypting tokens
 cipher.loadKeys()
 
-# init SQL database connect
-app.config['SQLALCHEMY_DATABASE_URI'] = database.getUri()
-app.config['SECRET_KEY'] = secrets.token_hex(16)
-db = SQLAlchemy(app)
+
 
 def tokenRequired(func):
     @wraps(func)
