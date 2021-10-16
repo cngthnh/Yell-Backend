@@ -7,8 +7,7 @@ import database
 app = Flask(__name__)
 
 # load keys for signing and encrypting tokens
-cipher.getEncKey()
-cipher.getSigKey()
+cipher.loadKeys()
 
 # init SQL database connect
 engine = database.init()
