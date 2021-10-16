@@ -2,8 +2,17 @@ from flask import Flask, request, jsonify
 import cipher
 import os
 from functools import wraps
+import database
 
 app = Flask(__name__)
+
+# load keys for signing and encrypting tokens
+cipher.getEncKey()
+cipher.getSigKey()
+
+# init SQL database connect
+engine = database.init()
+engine.connect()
 
 def tokenRequired(func):
     @wraps(func)

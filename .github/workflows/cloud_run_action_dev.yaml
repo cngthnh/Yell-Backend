@@ -41,4 +41,5 @@ jobs:
         gcloud run deploy ${{ secrets.GCP_APPLICATION_DEV }} --image gcr.io/${{ secrets.GCP_PROJECT }}/${{ secrets.GCP_APPLICATION_DEV }} \
         --platform managed \
         --allow-unauthenticated \
-        --memory 256M
+        --memory 256M \
+        --vpc-connector sql-connector
