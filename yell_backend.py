@@ -71,6 +71,7 @@ def createAccount():
     user = User('cngthnh', '19120374@gmail.com', 'Vu Cong Thanh', 'thisisahashstring')
     db.session.add(user)
     db.session.commit()
+    return 'Success'
     
 if __name__ == '__main__':
     db.create_all()
