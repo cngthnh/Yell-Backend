@@ -12,9 +12,9 @@ from database import db, getDbUri
 # init SQL database connect
 app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
 app.config['SECRET_KEY'] = secrets.token_hex(16)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
-db.app = app
 
 from models import *
 
@@ -62,4 +62,5 @@ def createAccount():
     db.session.commit()
     
 if __name__ == '__main__':
+    db.create_all()
     app.run(ssl_context='adhoc', host='0.0.0.0', port=os.environ.get('PORT', 80))
