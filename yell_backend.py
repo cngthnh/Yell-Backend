@@ -18,6 +18,7 @@ loadKeys()
 
 # init SQL database connect
 app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
+raise Exception(app.config['SQLALCHEMY_DATABASE_URI'])
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
