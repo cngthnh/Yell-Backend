@@ -23,5 +23,3 @@ def getDbUri():
             db_name,
             'utf8')
     return URI
-
-db = SQLAlchemy()

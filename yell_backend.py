@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
 import cipher
 import os
 from functools import wraps
@@ -7,16 +8,25 @@ import secrets
 
 app = Flask(__name__)
 
-from database import db, getDbUri
+from database import getDbUri
 
 # init SQL database connect
 app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db.init_app(app)
+db = SQLAlchemy(app)
 
-from models import *
+class User(db.Model):
+    id = db.Column(db.String(20), primary_key=True)
+    email = db.Column(db.Text)
+    name = db.Column(db.UnicodeText)
+    hash = db.Column(db.String(32))
+    def __init__(self, id, email, name, hash):
+        self.id = id
+        self.email = email
+        self.name = name
+        self.hash = hash
 
 # load keys for signing and encrypting tokens
 cipher.loadKeys()
