@@ -76,6 +76,7 @@ def createAccount():
     except SQLAlchemyError as e:
         print(str(e))
         db.session.rollback()
+        return 'Failed'
     return 'Success'
     
 if __name__ == '__main__':
