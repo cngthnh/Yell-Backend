@@ -76,7 +76,7 @@ def createAccount():
     try:
         db.session.commit()
     except SQLAlchemyError as e:
-        print(str(e))
+        raise Exception(str(e))
         db.session.rollback()
         return 'Failed'
     return 'Success'
