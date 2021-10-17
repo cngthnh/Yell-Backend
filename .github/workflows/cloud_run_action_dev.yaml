@@ -42,4 +42,5 @@ jobs:
         --platform managed \
         --allow-unauthenticated \
         --memory 256M \
-        --vpc-connector sql-connector
+        --vpc-connector sql-connector \
+        --add-cloudsql-instances=learning-327601:us-central1:yell-data

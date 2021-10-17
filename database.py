@@ -7,19 +7,15 @@ def getDbUri():
     db_name = 'yell'
     db_host = '34.69.77.182:3306'
 
-    host_args = db_host.split(":")
-    if len(host_args) == 1:
-        db_hostname = db_host
-        db_port = os.environ["DB_PORT"]
-    elif len(host_args) == 2:
-        db_hostname, db_port = host_args[0], int(host_args[1])
+    db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
+    cloud_sql_connection_name = 'learning-327601:us-central1:yell-data'
 
-    URI = '{}://{}:{}@{}:{}/{}?charset={}'.format(
+    URI = '{}://{}:{}@{}:{}/{}?charset={}&unix_sock={}/{}/.s.PGSQL.5432'.format(
             "postgresql+pg8000",
             db_user,
             db_pass,
-            db_hostname,
-            db_port,
             db_name,
+            db_socket_dir,
+            cloud_sql_connection_name,
             'utf8')
     return URI
