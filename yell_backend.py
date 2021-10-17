@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError
 import cipher
 import os
 from functools import wraps
@@ -70,7 +71,11 @@ def authorized():
 def createAccount():
     user = User('cngthnh', '19120374@gmail.com', 'Vu Cong Thanh', 'thisisahashstring')
     db.session.add(user)
-    #db.session.commit()
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        db.session.rollback()
     return 'Success'
     
 if __name__ == '__main__':
