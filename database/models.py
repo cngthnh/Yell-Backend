@@ -6,7 +6,7 @@ class UserAccount(db.Model):
     id = db.Column(db.String(20), primary_key=True)
     email = db.Column(db.Text, unique=True)
     name = db.Column(db.UnicodeText)
-    hash = db.Column(db.String(32))
+    hash = db.Column(db.String(64))
     confirmed = db.Column(db.Boolean)
     def __init__(self, id, email, name, hash):
         self.id = id
