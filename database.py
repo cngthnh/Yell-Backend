@@ -10,13 +10,12 @@ def getDbUri():
     db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
     cloud_sql_connection_name = 'learning-327601:us-central1:yell-data'
 
-    URI = '{}://{}:{}@{}?unix_sock={}/{}/.s.PGSQL.5432&charset={}'.format(
+    URI = '{}://{}:{}@{}?unix_sock={}/{}/.s.PGSQL.5432'.format(
             "postgresql+pg8000",
             db_user,
             db_pass,
             db_name,
             db_socket_dir,
             cloud_sql_connection_name,
-            'utf8'
             )
     return URI
