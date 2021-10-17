@@ -1,12 +1,16 @@
+from flask_sqlalchemy import SQLAlchemy
 from database import db
 
-class User(db.Model):
+class UserAccount(db.Model):
+    __tablename__ = 'user_account'
     id = db.Column(db.String(20), primary_key=True)
     email = db.Column(db.Text)
     name = db.Column(db.UnicodeText)
     hash = db.Column(db.String(32))
+    confirmed = db.Column(db.Boolean)
     def __init__(self, id, email, name, hash):
         self.id = id
         self.email = email
         self.name = name
         self.hash = hash
+        self.confirmed = False

@@ -6,10 +6,11 @@ import os
 from functools import wraps
 import secrets
 
+from database import getDbUri, db
+from models import *
 
+# init Flask
 app = Flask(__name__)
-
-from database import getDbUri
 
 # init SQL database connect
 app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
@@ -17,25 +18,10 @@ app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 with app.app_context():
-    db = SQLAlchemy(app)
-
-class UserAccount(db.Model):
-    id = db.Column(db.String(20), primary_key=True)
-    email = db.Column(db.Text)
-    name = db.Column(db.UnicodeText)
-    hash = db.Column(db.String(32))
-    confirmed = db.Column(db.Boolean)
-    def __init__(self, id, email, name, hash):
-        self.id = id
-        self.email = email
-        self.name = name
-        self.hash = hash
-        self.confirmed = False
+    db.init_app(app)
 
 # load keys for signing and encrypting tokens
 cipher.loadKeys()
-
-
 
 def tokenRequired(func):
     @wraps(func)
@@ -76,9 +62,8 @@ def createAccount():
     try:
         db.session.commit()
     except SQLAlchemyError as e:
-        raise Exception(str(e))
         db.session.rollback()
-        return 'Failed'
+        return jsonify(message='FAILED'), 403
     return 'Success'
     
 if __name__ == '__main__':

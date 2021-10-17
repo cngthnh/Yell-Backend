@@ -22,3 +22,5 @@ def getDbUri():
             db_port,
             db_name)
     return URI
+
+db = SQLAlchemy()
