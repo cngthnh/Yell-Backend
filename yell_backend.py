@@ -14,6 +14,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 
 db.init_app(app)
+db.app = app
 
 from models import *
 
