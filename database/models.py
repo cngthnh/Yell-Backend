@@ -4,7 +4,7 @@ from database import db
 class UserAccount(db.Model):
     __tablename__ = 'user_account'
     id = db.Column(db.String(20), primary_key=True)
-    email = db.Column(db.Text)
+    email = db.Column(db.Text, unique=True)
     name = db.Column(db.UnicodeText)
     hash = db.Column(db.String(32))
     confirmed = db.Column(db.Boolean)

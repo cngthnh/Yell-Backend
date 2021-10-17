@@ -4,8 +4,9 @@ from jose import jwt
 from jose import jwe
 from jose import jwk
 from jose.utils import base64url_decode
-
 from jose.constants import ALGORITHMS
+from database.models import UserAccount
+from database.utils import db
 
 YELL_ISSUER = 'Yell App by Yellion'
 
@@ -83,7 +84,12 @@ def accountCheck(token):
         tokenDict = decode(signedToken)
         if tokenDict['iss'] != YELL_ISSUER:
             return False
+
         # account check in DB
+        if (db.session.query(UserAccount.uid).filter_by(uid = tokenDict['uid'], hash = tokenDict['hash']).first() is None):
+            return False
+        return True
+
     except Exception:
         return False
 
