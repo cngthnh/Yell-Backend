@@ -6,7 +6,7 @@ def getDbUri():
     db_pass = os.environ.get('DB_PASS')
     db_name = os.environ.get('DB_NAME')
     db_host = os.environ.get('DB_HOST')
-
+    
     host_args = db_host.split(":")
     if len(host_args) == 1:
         db_hostname = db_host
@@ -28,7 +28,7 @@ def loadDbConfigs():
         os.environ['DB_USER'] = (open('db_user', 'r').readline()).strip()
         os.environ['DB_PASS'] = (open('db_pass', 'r').readline()).strip()
         os.environ['DB_NAME'] = (open('db_name', 'r').readline()).strip()
-        os.environ['DB_HOST'] = (open('db_pass', 'r').readline()).strip()
+        os.environ['DB_HOST'] = (open('db_host', 'r').readline()).strip()
     except Exception:
         pass
 
