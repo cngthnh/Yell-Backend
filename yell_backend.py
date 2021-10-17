@@ -15,7 +15,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+with app.app_context():
+    db = SQLAlchemy(app)
 
 class User(db.Model):
     id = db.Column(db.String(20), primary_key=True)
