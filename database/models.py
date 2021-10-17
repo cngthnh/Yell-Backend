@@ -14,3 +14,8 @@ class UserAccount(db.Model):
         self.name = name
         self.hash = hash
         self.confirmed = False
+
+def checkAccount(uid, hash):
+    if (db.session.query(UserAccount.uid).filter_by(uid = uid, hash = hash).first() is None):
+        return False
+    return True

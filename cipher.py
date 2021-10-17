@@ -7,8 +7,7 @@ from jose.utils import base64url_decode
 from jose.constants import ALGORITHMS
 from database.models import UserAccount
 from database.utils import db
-
-YELL_ISSUER = 'Yell App by Yellion'
+from definitions import *
 
 def loadKeys():
     try:
@@ -25,7 +24,7 @@ def encode(_dict):
     Input: dictionary
     Output: JWT (text)
     """
-    _dict['iss'] = YELL_ISSUER
+    _dict[ISSUER_KEY] = YELL_ISSUER
     return jwt.encode(_dict, os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS256)
 
 def verify(token):
@@ -70,7 +69,7 @@ def generateToken(_dict):
     """
     return encrypt(encode(_dict))
 
-def accountCheck(token):
+def parseToken(token):
     """
     Check if the token is signed and have correct credentials
     Input: JWE (text)
@@ -82,15 +81,10 @@ def accountCheck(token):
             return False
 
         tokenDict = decode(signedToken)
-        if tokenDict['iss'] != YELL_ISSUER:
-            return False
-
-        # account check in DB
-        if (db.session.query(UserAccount.uid).filter_by(uid = tokenDict['uid'], hash = tokenDict['hash']).first() is None):
-            return False
-        return True
+        if tokenDict[ISSUER_KEY] != YELL_ISSUER:
+            return None
 
     except Exception:
-        return False
+        return None
 
-    return True
+    return tokenDict

@@ -5,7 +5,7 @@ from cipher import *
 import os
 from functools import wraps
 import secrets
-
+from definitions import *
 from database.utils import getDbUri, db, loadDbConfigs
 from database.models import *
 
@@ -28,13 +28,19 @@ def tokenRequired(func):
     @wraps(func)
     def tokenCheck(*args, **kwargs):
 
-        token = request.form.get('token')
+        token = request.form.get(API_TOKEN)
 
         if token is None:
-            return jsonify(message='INVALID_TOKEN'), 403
+            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
-        if not accountCheck(token):
-            return jsonify(message='INVALID_TOKEN'), 403
+        # parse token => dict of info
+        infoDict = parseToken(token)
+        if infoDict is None:
+            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+
+        # check if account is valid in DB
+        if not checkAccount(infoDict[API_UID], infoDict[API_HASH]):
+            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         return func(*args, **kwargs)
     return tokenCheck
@@ -45,13 +51,19 @@ def homepage():
 
 @app.route('/api/auth', methods=['POST'])
 def getToken():
-    if (request.form.get('uid') is None or request.form.get('hash') is None):
-        return jsonify(message='INVALID_CREDENTIALS'), 403
+    _uid = request.form.get(API_UID)
+    _hash = request.form.get(API_HASH)
+
+    if (_uid is None or _hash is None):
+        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
+
     try:
-        _tokenDict = {'uid': request.form.get('uid'), 'hash': request.form.get('hash')}
-        return generateToken(_tokenDict)
+        if checkAccount(_uid, _hash):
+            _tokenDict = {API_UID: request.form.get(API_UID), API_HASH: request.form.get(API_HASH)}
+            return generateToken(_tokenDict)
+        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
     except Exception:
-        return jsonify(message='INVALID_CREDENTIALS'), 403
+        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
 
 @app.route('/api/authorized', methods=['POST'])
 @tokenRequired
@@ -60,38 +72,53 @@ def authorized():
 
 @app.route('/api/sign_up', methods=['POST'])
 def createAccount():
-    if (request.form.get('uid') is None or
-        request.form.get('hash') is None or
-        request.form.get('email') is None or
-        request.form.get('name') is None):
-        return jsonify(message='INVALID_USER_INFOMATION'), 403
+    _uid = request.form.get(API_UID)
+    _email = request.form.get(API_EMAIL)
+    _hash = request.form.get(API_HASH)
+    _name = request.form.get(API_USER_FULL_NAME)
 
-    uid = UserAccount(request.form.get('uid'), request.form.get('email'), request.form.get('name'), request.form.get('hash'))
-    db.session.add(uid)
+    if (_uid is None or
+        _hash is None or
+        _email is None or
+        _name is None):
+        return jsonify(message=INVALID_DATA_MESSAGE), 403
+
+    user = UserAccount(_uid, _email, _name, _hash)
+    db.session.add(user)
 
     try:
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return jsonify(message='FAILED'), 403
+        return jsonify(message=FAILED_MESSAGE), 403
 
-    return jsonify(message='SUCCESS'), 200
+    return jsonify(message=SUCCEED_MESSAGE, 
+                    token = generateToken({
+                    API_UID: _uid, 
+                    API_HASH: _hash
+                    })), 200
 
 @app.route('/api/email_check', methods=['POST'])
 def checkEmailAvailability():
-    if request.form.get('email') is None:
-        return jsonify(message='INVALID_EMAIL'), 403
-    if db.session.query(UserAccount.email).filter_by(email=request.form.get('email')).first() is None:
-        return jsonify(message='VALID_EMAIL'), 200
-    return jsonify(message='INVALID_EMAIL'), 200
+
+    if request.form.get(API_EMAIL) is None:
+        return jsonify(message=INVALID_EMAIL_MESSAGE), 403
+
+    if db.session.query(UserAccount.email).filter_by(email=request.form.get(API_EMAIL)).first() is None:
+        return jsonify(message=OK_MESSAGE), 200
+
+    return jsonify(message=INVALID_EMAIL_MESSAGE), 200
 
 @app.route('/api/uid_check', methods=['POST'])
 def checkUidAvailability():
-    if request.form.get('uid') is None:
-        return jsonify(message='INVALID_UID'), 403
-    if db.session.query(UserAccount.id).filter_by(id=request.form.get('uid')).first() is None:
-        return jsonify(message='VALID_UID'), 200
-    return jsonify(message='INVALID_UID'), 200
+
+    if request.form.get(API_UID) is None:
+        return jsonify(message=INVALID_UID_MESSAGE), 403
+
+    if db.session.query(UserAccount.id).filter_by(id=request.form.get(API_UID)).first() is None:
+        return jsonify(message=OK_MESSAGE), 200
+
+    return jsonify(message=INVALID_UID_MESSAGE), 200
     
 if __name__ == '__main__':
     db.create_all()
