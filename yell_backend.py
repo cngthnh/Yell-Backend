@@ -64,14 +64,15 @@ def createAccount():
         request.form.get('hash') is None or
         request.form.get('email') is None or
         request.form.get('name') is None):
-        return jsonify(message='INVALID_CREDENTIALS'), 403
+        return jsonify(message='INVALID_USER_INFOMATION'), 403
 
     uid = UserAccount(request.form.get('uid'), request.form.get('email'), request.form.get('name'), request.form.get('hash'))
     db.session.add(uid)
 
     try:
         db.session.commit()
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        raise Exception(str(e))
         db.session.rollback()
         return jsonify(message='FAILED'), 403
 
