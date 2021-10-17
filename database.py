@@ -5,7 +5,7 @@ def getDbUri():
     db_user = 'yell-backend'
     db_pass = '8SA46Wil8iEJt|9]z'
     db_name = 'yell'
-    db_host = '10.80.144.4:3306'
+    db_host = '34.69.77.182:3306'
 
     host_args = db_host.split(":")
     if len(host_args) == 1:
