@@ -19,16 +19,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 with app.app_context():
     db = SQLAlchemy(app)
 
-class User(db.Model):
+class UserAccount(db.Model):
     id = db.Column(db.String(20), primary_key=True)
     email = db.Column(db.Text)
     name = db.Column(db.UnicodeText)
     hash = db.Column(db.String(32))
+    confirmed = db.Column(db.Boolean)
     def __init__(self, id, email, name, hash):
         self.id = id
         self.email = email
         self.name = name
         self.hash = hash
+        self.confirmed = False
 
 # load keys for signing and encrypting tokens
 cipher.loadKeys()
@@ -69,7 +71,7 @@ def authorized():
 
 @app.route('/api/signup', methods=['GET'])
 def createAccount():
-    user = User('cngthnh', '19120374@gmail.com', 'Vu Cong Thanh', 'thisisahashstring')
+    user = UserAccount('cngthnh', '19120374@gmail.com', 'Vu Cong Thanh', 'thisisahashstring')
     db.session.add(user)
     try:
         db.session.commit()
