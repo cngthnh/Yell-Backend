@@ -18,7 +18,6 @@ loadKeys()
 
 # init SQL database connect
 app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
-raise Exception(app.config['SQLALCHEMY_DATABASE_URI'])
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -78,7 +77,7 @@ def createAccount():
 
     return jsonify(message='SUCCESS'), 200
 
-@app.route('api/email_check', methods=['POST'])
+@app.route('/api/email_check', methods=['POST'])
 def checkEmailAvailability():
     if request.form.get('email') is None:
         return jsonify(message='INVALID_EMAIL'), 403
@@ -86,7 +85,7 @@ def checkEmailAvailability():
         return jsonify(message='VALID_EMAIL'), 200
     return jsonify(message='INVALID_EMAIL'), 200
 
-@app.route('api/uid_check', methods=['POST'])
+@app.route('/api/uid_check', methods=['POST'])
 def checkUidAvailability():
     if request.form.get('uid') is None:
         return jsonify(message='INVALID_UID'), 403
