@@ -14,12 +14,11 @@ def getDbUri():
     elif len(host_args) == 2:
         db_hostname, db_port = host_args[0], int(host_args[1])
 
-    URI = '{}://{}:{}@{}:{}/{}?charset={}'.format(
+    URI = '{}://{}:{}@{}:{}/{}'.format(
             "postgresql+pg8000",
             db_user,
             db_pass,
             db_hostname,
             db_port,
-            db_name,
-            'utf8')
+            db_name)
     return URI
