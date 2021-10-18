@@ -110,11 +110,9 @@ def createAccount():
 
     sendVerificationEmail(_email, encode({'uid': _uid}, EMAIL_VERIFICATION_TIME))
 
-    return jsonify(message=PENDING_VERIFICATION_MESSAGE, 
-                    token = generateToken({
-                    API_UID: _uid, 
-                    API_HASH: _hash
-                    })), 200
+    token = generateToken({API_UID: _uid, API_HASH: _hash})
+
+    return jsonify(message=PENDING_VERIFICATION_MESSAGE, token = token), 200
 
 @app.route('/api/email_check', methods=['POST'])
 def checkEmailAvailability():
