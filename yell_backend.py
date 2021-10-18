@@ -104,7 +104,8 @@ def createAccount():
 
     try:
         db.session.commit()
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        raise Exception(str(e))
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 403
 
