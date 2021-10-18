@@ -39,7 +39,10 @@ def tokenRequired(func):
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         # check if account is valid in DB
+        #try:
         if not checkAccount(infoDict[API_UID], infoDict[API_HASH]):
+            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+        #except Exception:
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         return func(*args, **kwargs)

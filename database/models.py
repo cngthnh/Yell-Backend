@@ -18,4 +18,5 @@ class UserAccount(db.Model):
 def checkAccount(uid, hash):
     if (db.session.query(UserAccount.uid).filter_by(uid = uid, hash = hash).first() is None):
         return False
+    raise Exception(db.session.query(UserAccount.uid).filter_by(uid = uid, hash = hash).first())
     return True
