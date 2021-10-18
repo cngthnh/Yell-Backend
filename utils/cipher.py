@@ -7,7 +7,7 @@ from jose.utils import base64url_decode
 from jose.constants import ALGORITHMS
 from database.models import UserAccount
 from database.utils import db
-from definitions import *
+from utils.definitions import *
 from datetime import datetime, timedelta
 
 def loadKeys():
