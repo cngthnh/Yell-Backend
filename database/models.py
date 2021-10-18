@@ -16,7 +16,6 @@ class UserAccount(db.Model):
         self.confirmed = False
 
 def checkAccount(uid, hash):
-    raise Exception(db.session.query(UserAccount.uid).filter_by(uid = uid, hash = hash).first())
-    if (db.session.query(UserAccount.uid).filter_by(uid = uid, hash = hash).first() is None):
+    if (db.session.query(UserAccount.uid).filter_by(id = uid, hash = hash).first() is None):
         return False
     return True
