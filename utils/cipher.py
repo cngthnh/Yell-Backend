@@ -8,6 +8,7 @@ from jose.constants import ALGORITHMS
 from database.models import UserAccount
 from database.utils import db
 from definitions import *
+from datetime import datetime, timedelta
 
 def loadKeys():
     try:
@@ -18,13 +19,16 @@ def loadKeys():
     except Exception:
         pass
 
-def encode(_dict):
+def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
     """ 
     Sign the dictionary
     Input: dictionary
     Output: JWT (text)
     """
     _dict[ISSUER_KEY] = YELL_ISSUER
+    _dict[ISSUED_AT_KEY] = int(datetime.now())
+    _dict[NOT_BEFORE_KEY] = _dict[ISSUED_AT_KEY]
+    _dict[EXPIRATION_KEY] = _dict[ISSUED_AT_KEY] + timedelta(minutes = EMAIL_VERIFICATION_TIME)
     return jwt.encode(_dict, os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS256)
 
 def verify(token):
@@ -61,13 +65,13 @@ def decrypt(encrypted):
     """
     return jwe.decrypt(encrypted, os.environ.get('YELL_ENC_KEY', None))
 
-def generateToken(_dict):
+def generateToken(_dict, expired = DEFAULT_EXPIRATION_TIME):
     """
     Sign and encrypt the dict
     Input: dictionary
     Output: JWE (text)
     """
-    return encrypt(encode(_dict))
+    return encrypt(encode(_dict, expired=expired))
 
 def parseToken(token):
     """

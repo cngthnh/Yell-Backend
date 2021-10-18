@@ -1,13 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
-from cipher import *
+from utils.cipher import *
 import os
 from functools import wraps
 import secrets
-from definitions import *
+from utils.definitions import *
 from database.utils import getDbUri, db, loadDbConfigs
 from database.models import *
+from emailHandler.utils import *
 
 # init Flask
 app = Flask(__name__)
@@ -15,14 +16,22 @@ app = Flask(__name__)
 # load env
 loadDbConfigs()
 loadKeys()
+loadEmailConfigs()
 
-# init SQL database connect
+# init SQL database and email connection
 app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['MAIL_SERVER']='smtp-mail.outlook.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
 
 with app.app_context():
     db.init_app(app)
+    mail.init_app(app)
 
 def tokenRequired(func):
     @wraps(func)
@@ -73,6 +82,10 @@ def getToken():
 def authorized():
     return jsonify(message='AUTHORIZED'), 200
 
+@app.route('/api/account/verify/<token>', methods=['GET'])
+def verifyEmail():
+    pass
+
 @app.route('/api/sign_up', methods=['POST'])
 def createAccount():
     _uid = request.form.get(API_UID)
@@ -95,7 +108,9 @@ def createAccount():
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 403
 
-    return jsonify(message=SUCCEED_MESSAGE, 
+    sendVerificationEmail(_email, encode({'uid': _uid}))
+    
+    return jsonify(message=PENDING_VERIFICATION_MESSAGE, 
                     token = generateToken({
                     API_UID: _uid, 
                     API_HASH: _hash
