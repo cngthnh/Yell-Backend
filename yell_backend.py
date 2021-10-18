@@ -60,13 +60,13 @@ def getToken():
     if (_uid is None or _hash is None):
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
 
-    try:
-        if checkAccount(_uid, _hash):
-            _tokenDict = {API_UID: request.form.get(API_UID), API_HASH: request.form.get(API_HASH)}
-            return generateToken(_tokenDict)
-        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
-    except Exception:
-        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
+    # try:
+    if checkAccount(_uid, _hash):
+        _tokenDict = {API_UID: _uid, API_HASH: _hash}
+        return generateToken(_tokenDict)
+    return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
+    # except Exception:
+        # return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
 
 @app.route('/api/authorized', methods=['POST'])
 @tokenRequired
