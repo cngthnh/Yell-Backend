@@ -35,7 +35,7 @@ def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
 def verify(token):
     """
     Verify if the token was signed by the right key
-    Input: JWT (text)
+    Input: JWT (bytes or str)
     Output: boolean
     """
     key = jwk.construct(os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS256)
@@ -45,7 +45,7 @@ def verify(token):
 
 def decode(token):
     """ 
-    Input: JWT (text)
+    Input: JWT (bytes or str)
     Output: dictionary
     """
     return jwt.decode(token, os.environ.get('YELL_SIG_KEY', None))
@@ -53,8 +53,8 @@ def decode(token):
 def encrypt(token):
     """
     Encrypt the signed token
-    Input: JWT (text)
-    Output: Encrypted JWT (JWE) (text)
+    Input: JWT (bytes or str)
+    Output: Encrypted JWT (JWE) (bytes)
     """
     return jwe.encrypt(token, os.environ.get('YELL_ENC_KEY', None), algorithm=ALGORITHMS.DIR, encryption=ALGORITHMS.A256GCM)
 
@@ -62,7 +62,7 @@ def decrypt(encrypted):
     """
     Decrypt to get the signed token
     Input: Encrypted JWT (JWE) (text)
-    Output: JWT (text)
+    Output: JWT (bytes)
     """
     return jwe.decrypt(encrypted, os.environ.get('YELL_ENC_KEY', None))
 
@@ -70,14 +70,14 @@ def generateToken(_dict, expired = DEFAULT_EXPIRATION_TIME):
     """
     Sign and encrypt the dict
     Input: dictionary
-    Output: JWE (text)
+    Output: JWE (bytes)
     """
     return encrypt(encode(_dict, expired=expired))
 
 def parseToken(token):
     """
     Check if the token is signed and have correct credentials
-    Input: JWE (text)
+    Input: JWE (bytes or str)
     Output: boolean
     """
     try:
