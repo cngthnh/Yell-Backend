@@ -17,5 +17,5 @@ def loadEmailConfigs():
 
 def sendVerificationEmail(recipient, token):
     msg = Message(subject = 'Yell Account Verification', sender = os.environ.get('MAIL_USERNAME'), recipients = [recipient])
-    msg.html = render_template(EMAIL_VERIFICATION_TEMPLATE, link = 'https://google.com/api/account/verify/' + token)
+    msg.html = render_template('email_template.html', link = 'https://google.com/api/account/verify/' + token)
     mail.send(msg)
