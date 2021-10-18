@@ -1,6 +1,6 @@
 ## Yell Consts ##
 YELL_ISSUER = 'Yell App by Yellion'
-EMAIL_VERIFICATION_TEMPLATE = 'emailHandler/email_template.html'
+EMAIL_VERIFICATION_TEMPLATE = 'email_template.html'
 
 ## Messages ##
 INVALID_TOKEN_MESSAGE = 'INVALID_TOKEN' # None / can't be decrypt / fault signature tokens

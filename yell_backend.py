@@ -8,7 +8,7 @@ import secrets
 from utils.definitions import *
 from database.utils import getDbUri, db, loadDbConfigs
 from database.models import *
-from emailHandler.utils import *
+from utils.email import *
 
 # init Flask
 app = Flask(__name__)
