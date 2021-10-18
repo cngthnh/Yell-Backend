@@ -1,6 +1,8 @@
 from flask_mail import Mail, Message
 import os
 
+from utils.definitions import *
+
 mail = Mail()
 
 def loadEmailConfigs():
@@ -14,5 +16,5 @@ def loadEmailConfigs():
 
 def sendVerificationEmail(recipient, token):
     msg = Message(subject = 'Yell Account Verification', sender = os.environ.get('MAIL_USERNAME'), recipients = [recipient])
-    msg.html = open('email/email_template.html', 'r').read().format(token)
+    msg.html = open(EMAIL_VERIFICATION_TEMPLATE, 'r').read().format(token)
     mail.send(msg)
