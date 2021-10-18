@@ -108,8 +108,8 @@ def createAccount():
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 403
 
-    sendVerificationEmail(_email, encode({'uid': _uid}))
-    
+    sendVerificationEmail(_email, encode({'uid': _uid}, EMAIL_VERIFICATION_TIME))
+
     return jsonify(message=PENDING_VERIFICATION_MESSAGE, 
                     token = generateToken({
                     API_UID: _uid, 

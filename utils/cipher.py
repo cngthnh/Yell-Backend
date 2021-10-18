@@ -25,10 +25,11 @@ def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
     Input: dictionary
     Output: JWT (text)
     """
+    time_now = datetime.now()
     _dict[ISSUER_KEY] = YELL_ISSUER
-    _dict[ISSUED_AT_KEY] = int(datetime.now())
+    _dict[ISSUED_AT_KEY] = int(time_now.timestamp())
     _dict[NOT_BEFORE_KEY] = _dict[ISSUED_AT_KEY]
-    _dict[EXPIRATION_KEY] = _dict[ISSUED_AT_KEY] + timedelta(minutes = EMAIL_VERIFICATION_TIME)
+    _dict[EXPIRATION_KEY] = int((time_now + timedelta(minutes = expired)).timestamp())
     return jwt.encode(_dict, os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS256)
 
 def verify(token):
