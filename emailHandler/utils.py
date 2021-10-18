@@ -2,6 +2,7 @@ from flask_mail import Mail, Message
 import os
 
 from utils.definitions import *
+from flask import render_template
 
 mail = Mail()
 
@@ -16,5 +17,5 @@ def loadEmailConfigs():
 
 def sendVerificationEmail(recipient, token):
     msg = Message(subject = 'Yell Account Verification', sender = os.environ.get('MAIL_USERNAME'), recipients = [recipient])
-    msg.html = open(EMAIL_VERIFICATION_TEMPLATE, 'r').read().format(token)
+    msg.html = render_template(EMAIL_VERIFICATION_TEMPLATE, link = 'https://google.com/api/account/verify/' + token)
     mail.send(msg)
