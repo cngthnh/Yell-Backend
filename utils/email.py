@@ -15,7 +15,7 @@ def loadEmailConfigs():
     except Exception:
         pass
 
-def sendVerificationEmail(recipient, token):
+def sendVerificationEmail(recipient, token, recipient_name):
     msg = Message(subject = 'Yell Account Verification', sender = os.environ.get('MAIL_USERNAME'), recipients = [recipient])
-    msg.html = render_template('email_template.html', link = 'https://google.com/api/account/verify/' + token)
+    msg.html = render_template('email_template.html', link = 'https://google.com/api/account/verify/' + token, name = recipient_name)
     mail.send(msg)
