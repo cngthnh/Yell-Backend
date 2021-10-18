@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError
 from database.utils import db
 
 class UserAccount(db.Model):
@@ -16,6 +17,18 @@ class UserAccount(db.Model):
         self.confirmed = False
 
 def checkAccount(uid, hash):
-    if (db.session.query(UserAccount.id).filter_by(id = uid, hash = hash).first() is None):
+    result = db.session.query(UserAccount).filter_by(id = uid, hash = hash).first()
+    if (result is None):
+        return False
+    if (result.confirmed == False):
         return False
     return True
+
+def changeAccountStatus(uid, email):
+    db.session.query().filter_by(id = uid, email = email).update({'confirmed': True})
+    try:
+        db.session.commit()
+        return True
+    except SQLAlchemyError:
+        db.session.rollback()
+        return False

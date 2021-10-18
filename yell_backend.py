@@ -1,5 +1,6 @@
-from flask import Flask, request, jsonify
+from flask import Flask, json, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from jose.jws import verify
 from sqlalchemy.exc import SQLAlchemyError
 from utils.cipher import *
 import os
@@ -82,8 +83,16 @@ def authorized():
     return jsonify(message='AUTHORIZED'), 200
 
 @app.route('/api/account/verify/<token>', methods=['GET'])
-def verifyEmail():
-    pass
+def verifyAccount(token):
+    tokenDict = decodeWithTimeCheck(token)
+    try:
+        result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
+    except Exception:
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+    if result == True:
+        return jsonify(message=VERIFIED_MESSAGE), 200
+    else:
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
 @app.route('/api/sign_up', methods=['POST'])
 def createAccount():
@@ -107,7 +116,7 @@ def createAccount():
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 403
 
-    sendVerificationEmail(_email, encode({'uid': _uid}, EMAIL_VERIFICATION_TIME), _name)
+    sendVerificationEmail(_email, encode({'uid': _uid, 'email': _email}, EMAIL_VERIFICATION_TIME), _name)
 
     token = generateToken({API_UID: _uid, API_HASH: _hash}).decode('UTF-8')
 

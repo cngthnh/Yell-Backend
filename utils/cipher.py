@@ -8,7 +8,7 @@ from jose.constants import ALGORITHMS
 from database.models import UserAccount
 from database.utils import db
 from utils.definitions import *
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
     """ 
@@ -23,7 +23,7 @@ def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
     _dict[EXPIRATION_KEY] = int((time_now + timedelta(minutes = expired)).timestamp())
     return jwt.encode(_dict, os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS256)
 
-def verify(token):
+def verifyToken(token):
     """
     Verify if the token was signed by the right key
     Input: JWT (bytes or str)
@@ -73,10 +73,10 @@ def parseToken(token):
     """
     try:
         signedToken = decrypt(token)
-        if not verify(signedToken):
+        if not verifyToken(signedToken):
             return False
 
-        tokenDict = decode(signedToken)
+        tokenDict = decodeWithTimeCheck(signedToken)
         if tokenDict[ISSUER_KEY] != YELL_ISSUER:
             return None
 
@@ -84,3 +84,17 @@ def parseToken(token):
         return None
 
     return tokenDict
+
+def decodeWithTimeCheck(token):
+    try:
+        time_now = datetime.now()
+        if not verifyToken(token):
+            return None
+        tokenDict = decode(token)
+        if (tokenDict[ISSUER_KEY] != YELL_ISSUER or
+            datetime.fromtimestamp(int(tokenDict[NOT_BEFORE_KEY])) > time_now or
+            datetime.fromtimestamp(int(tokenDict[EXPIRATION_KEY])) < time_now):
+            return None
+        return tokenDict
+    except Exception:
+        pass

@@ -15,6 +15,7 @@ FAILED_MESSAGE = 'FAILED' # something went wrong
 PENDING_VERIFICATION_MESSAGE = 'PENDING_VERIFICATION' # account needs to be verified by email
 EMAIL_VERIFICATION_TIME = 10 # 10 minutes
 DEFAULT_EXPIRATION_TIME = 43800 # 1 month
+VERIFIED_MESSAGE = 'VERIFIED'
 
 ## Key names ##
 ISSUER_KEY = 'iss'
