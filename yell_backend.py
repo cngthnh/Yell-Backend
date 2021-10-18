@@ -6,17 +6,16 @@ import os
 from functools import wraps
 import secrets
 from utils.definitions import *
-from database.utils import getDbUri, db, loadDbConfigs
+from database.utils import getDbUri, db
 from database.models import *
-from utils.email import *
+from utils.email import sendVerificationEmail, mail
+from utils.loader import loadConfigs
 
 # init Flask
 app = Flask(__name__)
 
 # load env
-loadDbConfigs()
-loadKeys()
-loadEmailConfigs()
+loadConfigs()
 
 # init SQL database and email connection
 app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()

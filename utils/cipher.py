@@ -10,15 +10,6 @@ from database.utils import db
 from utils.definitions import *
 from datetime import datetime, timedelta
 
-def loadKeys():
-    try:
-        os.environ['YELL_ENC_KEY'] = open('enc','r').readline().strip()
-        os.remove('enc')
-        os.environ['YELL_SIG_KEY'] = open('sig','r').readline().strip()
-        os.remove('sig')
-    except Exception:
-        pass
-
 def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
     """ 
     Sign the dictionary
