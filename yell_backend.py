@@ -39,10 +39,10 @@ def tokenRequired(func):
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         # check if account is valid in DB
-        #try:
-        if not checkAccount(infoDict[API_UID], infoDict[API_HASH]):
-            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-        #except Exception:
+        try:
+            if not checkAccount(infoDict[API_UID], infoDict[API_HASH]):
+                return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+        except Exception:
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         return func(*args, **kwargs)
@@ -60,13 +60,13 @@ def getToken():
     if (_uid is None or _hash is None):
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
 
-    # try:
-    if checkAccount(_uid, _hash):
-        _tokenDict = {API_UID: request.form.get(API_UID), API_HASH: request.form.get(API_HASH)}
-        return generateToken(_tokenDict)
-    return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
-    # except Exception:
-    #     return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
+    try:
+        if checkAccount(_uid, _hash):
+            _tokenDict = {API_UID: request.form.get(API_UID), API_HASH: request.form.get(API_HASH)}
+            return generateToken(_tokenDict)
+        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
+    except Exception:
+        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
 
 @app.route('/api/authorized', methods=['POST'])
 @tokenRequired
