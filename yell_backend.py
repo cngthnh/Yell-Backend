@@ -85,6 +85,8 @@ def authorized():
 @app.route('/api/account/verify/<token>', methods=['GET'])
 def verifyAccount(token):
     tokenDict = decodeWithTimeCheck(token)
+    if tokenDict is None:
+        return jsonify(message=EXPIRED_TOKEN_MESSAGE), 403
     try:
         result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
     except Exception:
