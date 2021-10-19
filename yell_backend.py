@@ -1,5 +1,4 @@
 from flask import Flask, json, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 from utils.cipher import *
 import os
@@ -94,7 +93,6 @@ def verifyAccount(token):
     try:
         result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
     except Exception as e:
-        raise Exception(str(e))
         return jsonify(message='INVALID_TOKEN_MESSAGE'), 403
     if result == True:
         return jsonify(message=VERIFIED_MESSAGE), 200
