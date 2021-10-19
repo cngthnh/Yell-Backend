@@ -30,6 +30,8 @@ def verifyToken(token):
     Output: boolean
     """
     key = jwk.construct(os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS256)
+    if (isinstance(token, str)):
+        token = token.encode()
     message, encoded_sig = token.rsplit(b'.', 1)
     decoded_sig = base64url_decode(encoded_sig)
     return key.verify(message, decoded_sig)
@@ -87,7 +89,6 @@ def parseToken(token):
 
 def decodeWithTimeCheck(token):
     # try:
-    raise Exception(token)
     time_now = datetime.now()
     if not verifyToken(token.encode('UTF-8')):
         return None
