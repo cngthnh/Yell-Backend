@@ -93,7 +93,8 @@ def verifyAccount(token):
 
     try:
         result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
-    except Exception:
+    except Exception as e:
+        raise Exception(str(e))
         return jsonify(message='INVALID_TOKEN_MESSAGE'), 403
     if result == True:
         return jsonify(message=VERIFIED_MESSAGE), 200
