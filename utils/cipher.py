@@ -86,16 +86,17 @@ def parseToken(token):
     return tokenDict
 
 def decodeWithTimeCheck(token):
-    try:
-        time_now = datetime.now()
-        if not verifyToken(token):
-            return None
-        tokenDict = decode(token)
-        if (tokenDict[ISSUER_KEY] != YELL_ISSUER or
-            datetime.fromtimestamp(int(tokenDict[NOT_BEFORE_KEY])) > time_now or
-            datetime.fromtimestamp(int(tokenDict[EXPIRATION_KEY])) < time_now):
-            raise Exception(str(time_now) + str(datetime.fromtimestamp(int(tokenDict[NOT_BEFORE_KEY]))) + str(datetime.fromtimestamp(int(tokenDict[EXPIRATION_KEY]))))
-            return None
-        return tokenDict
-    except Exception:
-        pass
+    # try:
+    time_now = datetime.now()
+    if not verifyToken(token):
+        raise Exception(token)
+        return None
+    tokenDict = decode(token)
+    if (tokenDict[ISSUER_KEY] != YELL_ISSUER or
+        datetime.fromtimestamp(int(tokenDict[NOT_BEFORE_KEY])) > time_now or
+        datetime.fromtimestamp(int(tokenDict[EXPIRATION_KEY])) < time_now):
+        raise Exception(str(time_now) + str(datetime.fromtimestamp(int(tokenDict[NOT_BEFORE_KEY]))) + str(datetime.fromtimestamp(int(tokenDict[EXPIRATION_KEY]))))
+        return None
+    return tokenDict
+    # except Exception:
+    #     pass
