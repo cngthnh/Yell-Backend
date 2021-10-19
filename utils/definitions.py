@@ -1,6 +1,7 @@
 ## Yell Consts ##
 YELL_ISSUER = 'Yell App by Yellion'
-EMAIL_VERIFICATION_TEMPLATE = 'email_template.html'
+EMAIL_VRF_TEMPLATE_HTML = 'email_verification_template.html'
+EMAIL_VRF_TEMPLATE_TXT = 'email_verification_template.txt'
 
 ## Messages ##
 INVALID_TOKEN_MESSAGE = 'INVALID_TOKEN' # None / can't be decrypt / fault signature tokens
@@ -30,3 +31,11 @@ API_UID = 'uid'
 API_HASH = 'hash'
 API_EMAIL = 'email'
 API_USER_FULL_NAME = 'name'
+
+# Endpoints
+EMAIL_VRF_ENDPOINT = '/api/account/verify/'
+AUTH_ENDPOINT = '/api/account/auth'
+AUTHORIZED_TEST_ENDPOINT = '/api/account/authorized'
+SIGNUP_ENDPOINT = '/api/account/sign_up'
+EMAIL_CHECK_ENDPOINT = '/api/account/email_check'
+UID_CHECK_ENDPOINT = '/api/account/uid_check'

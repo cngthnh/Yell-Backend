@@ -33,7 +33,7 @@ def tokenRequired(func):
 def homepage():
     return 'Yell by Yellion'
 
-@app.route('/api/auth', methods=['POST'])
+@app.route(AUTH_ENDPOINT, methods=['POST'])
 def getToken():
     _uid = request.form.get(API_UID)
     _hash = request.form.get(API_HASH)
@@ -49,12 +49,12 @@ def getToken():
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
 
-@app.route('/api/authorized', methods=['POST'])
+@app.route(AUTHORIZED_TEST_ENDPOINT, methods=['POST'])
 @tokenRequired
 def authorized():
     return jsonify(message='AUTHORIZED'), 200
 
-@app.route('/api/account/verify/<token>', methods=['GET'])
+@app.route(EMAIL_VRF_ENDPOINT + '<token>', methods=['GET'])
 def verifyAccount(token):
     if not verifyToken(token):
         return jsonify(message=INVALID_TOKEN_MESSAGE), 403
@@ -73,7 +73,7 @@ def verifyAccount(token):
     else:
         return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
-@app.route('/api/sign_up', methods=['POST'])
+@app.route(SIGNUP_ENDPOINT, methods=['POST'])
 def createAccount():
     _uid = request.form.get(API_UID)
     _email = request.form.get(API_EMAIL)
@@ -101,7 +101,7 @@ def createAccount():
 
     return jsonify(message=PENDING_VERIFICATION_MESSAGE, token = token), 200
 
-@app.route('/api/email_check', methods=['POST'])
+@app.route(EMAIL_CHECK_ENDPOINT, methods=['POST'])
 def checkEmailAvailability():
 
     if request.form.get(API_EMAIL) is None:
@@ -112,7 +112,7 @@ def checkEmailAvailability():
 
     return jsonify(message=INVALID_EMAIL_MESSAGE), 200
 
-@app.route('/api/uid_check', methods=['POST'])
+@app.route(UID_CHECK_ENDPOINT, methods=['POST'])
 def checkUidAvailability():
 
     if request.form.get(API_UID) is None:
