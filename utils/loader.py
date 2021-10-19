@@ -1,4 +1,10 @@
 import os
+from flask import Flask
+from utils.definitions import *
+from database.utils import getDbUri, db
+from database.models import *
+from utils.email import mail
+import secrets
 
 def loadDbConfigs():
     try:
@@ -43,3 +49,24 @@ def loadConfigs():
     loadEmailConfigs()
     loadKeys()
     loadUrl()
+
+# init Flask
+app = Flask(__name__)
+
+# load env
+loadConfigs()
+
+# init SQL database and email connection
+app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
+app.config['SECRET_KEY'] = secrets.token_hex(16)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['MAIL_SERVER']='smtp-mail.outlook.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+
+with app.app_context():
+    db.init_app(app)
+    mail.init_app(app)

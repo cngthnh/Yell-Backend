@@ -5,10 +5,8 @@ from jose import jwe
 from jose import jwk
 from jose.utils import base64url_decode
 from jose.constants import ALGORITHMS
-from database.models import UserAccount
-from database.utils import db
 from utils.definitions import *
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
     """ 
