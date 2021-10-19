@@ -94,6 +94,7 @@ def decodeWithTimeCheck(token):
         if (tokenDict[ISSUER_KEY] != YELL_ISSUER or
             datetime.fromtimestamp(int(tokenDict[NOT_BEFORE_KEY])) > time_now or
             datetime.fromtimestamp(int(tokenDict[EXPIRATION_KEY])) < time_now):
+            raise Exception(str(time_now) + str(datetime.fromtimestamp(int(tokenDict[NOT_BEFORE_KEY]))) + str(datetime.fromtimestamp(int(tokenDict[EXPIRATION_KEY]))))
             return None
         return tokenDict
     except Exception:
