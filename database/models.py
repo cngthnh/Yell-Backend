@@ -25,7 +25,7 @@ def checkAccount(uid, hash):
     return True
 
 def changeAccountStatus(uid, email):
-    db.session.query().filter_by(id = uid, email = email).first().update({'confirmed': True})
+    db.session.query().filter_by(id = uid, email = email).update({'confirmed': True})
     try:
         db.session.commit()
         return True

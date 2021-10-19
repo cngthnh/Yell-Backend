@@ -85,7 +85,7 @@ def authorized():
 def verifyAccount(token):
     if not verifyToken(token):
         return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-        
+
     try:
         tokenDict = decode(token)
     except jwt.ExpiredSignatureError:
@@ -94,7 +94,7 @@ def verifyAccount(token):
     try:
         result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
     except Exception:
-        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+        return jsonify(message='INVALID_TOKEN_MESSAGE'), 403
     if result == True:
         return jsonify(message=VERIFIED_MESSAGE), 200
     else:
