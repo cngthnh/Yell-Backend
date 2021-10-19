@@ -1,7 +1,7 @@
 from sqlalchemy.exc import SQLAlchemyError
 from utils.cipher import *
 from flask import request, jsonify
-from utils.loader import *
+from loader import *
 from functools import wraps
 from utils.email import sendVerificationEmail
 

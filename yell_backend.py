@@ -1,4 +1,4 @@
-from routes import *
+from utils.routes import *
 
 if __name__ == '__main__':
     db.create_all()
