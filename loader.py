@@ -60,10 +60,10 @@ loadConfigs()
 app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAIL_SERVER'] = 'smtp.mailtrap.io'#'smtp-mail.outlook.com'
-app.config['MAIL_PORT'] = 2525
-app.config['MAIL_USERNAME'] = '8376d7b5501ceb'# os.environ.get('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = 'b89f9518e5bda3'# os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 

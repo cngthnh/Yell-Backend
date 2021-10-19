@@ -19,6 +19,6 @@ def sendVerificationEmail(recipient, token, recipient_name):
     sender_mail = os.environ.get('MAIL_USERNAME')
     msg = Message(subject = 'Yell Account Verification', sender = ('Yell', sender_mail), recipients = [recipient])
     link = os.environ.get('YELL_MAIN_URL', '') + EMAIL_VRF_ENDPOINT + token
-    msg.body = open('templates/' + EMAIL_VRF_TEMPLATE_TXT).read()
+    msg.body = render_template(EMAIL_VRF_TEMPLATE_TXT)
     msg.html = render_template(EMAIL_VRF_TEMPLATE_HTML, link = link, name = recipient_name, mail=sender_mail)
     sendEmailAsync(msg)
