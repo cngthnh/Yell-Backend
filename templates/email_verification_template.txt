@@ -1,1 +1,4 @@
+Hi {{ name }},
 Thanks for signing up at Yell! You're almost ready to get started. Please click on the link below to verify your email address and enjoy exclusive cleaning services with us!
+{{ link }}
+The Yellion Team.
