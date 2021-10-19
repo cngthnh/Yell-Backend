@@ -1,6 +1,5 @@
 from flask import Flask, json, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from jose.jws import verify
 from sqlalchemy.exc import SQLAlchemyError
 from utils.cipher import *
 import os
@@ -84,9 +83,14 @@ def authorized():
 
 @app.route('/api/account/verify/<token>', methods=['GET'])
 def verifyAccount(token):
-    tokenDict = decodeWithTimeCheck(token)
-    if tokenDict is None:
-        return jsonify(message=EXPIRED_TOKEN_MESSAGE), 403
+    if not verifyToken(token):
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+        
+    try:
+        tokenDict = decode(token)
+    except jwt.ExpiredSignatureError:
+        return jsonify(message=EXPIRED_TOKEN_MESSAGE)
+
     try:
         result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
     except Exception:

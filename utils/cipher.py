@@ -14,7 +14,7 @@ def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
     """ 
     Sign the dictionary
     Input: dictionary
-    Output: JWT (text)
+    Output: JWT (bytes)
     """
     time_now = datetime.now()
     _dict[ISSUER_KEY] = YELL_ISSUER
@@ -78,7 +78,7 @@ def parseToken(token):
         if not verifyToken(signedToken):
             return False
 
-        tokenDict = decodeWithTimeCheck(signedToken)
+        tokenDict = decode(signedToken)
         if tokenDict[ISSUER_KEY] != YELL_ISSUER:
             return None
 
@@ -86,17 +86,3 @@ def parseToken(token):
         return None
 
     return tokenDict
-
-def decodeWithTimeCheck(token):
-    # try:
-    time_now = datetime.now()
-    if not verifyToken(token.encode('UTF-8')):
-        return None
-    tokenDict = decode(token)
-    if (tokenDict[ISSUER_KEY] != YELL_ISSUER or
-        datetime.fromtimestamp(int(tokenDict[NOT_BEFORE_KEY])) > time_now or
-        datetime.fromtimestamp(int(tokenDict[EXPIRATION_KEY])) < time_now):
-        return None
-    return tokenDict
-    # except Exception:
-    #     pass
