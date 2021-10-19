@@ -26,7 +26,7 @@ def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
 def verifyToken(token):
     """
     Verify if the token was signed by the right key
-    Input: JWT (bytes or str)
+    Input: JWT (str)
     Output: boolean
     """
     key = jwk.construct(os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS256)
@@ -87,15 +87,14 @@ def parseToken(token):
 
 def decodeWithTimeCheck(token):
     # try:
+    raise Exception(token)
     time_now = datetime.now()
-    if not verifyToken(token):
-        raise Exception(token)
+    if not verifyToken(token.encode('UTF-8')):
         return None
     tokenDict = decode(token)
     if (tokenDict[ISSUER_KEY] != YELL_ISSUER or
         datetime.fromtimestamp(int(tokenDict[NOT_BEFORE_KEY])) > time_now or
         datetime.fromtimestamp(int(tokenDict[EXPIRATION_KEY])) < time_now):
-        raise Exception(str(time_now) + str(datetime.fromtimestamp(int(tokenDict[NOT_BEFORE_KEY]))) + str(datetime.fromtimestamp(int(tokenDict[EXPIRATION_KEY]))))
         return None
     return tokenDict
     # except Exception:
