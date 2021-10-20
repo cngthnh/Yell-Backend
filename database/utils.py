@@ -1,5 +1,4 @@
 import os
-from flask_sqlalchemy import SQLAlchemy
 
 def getDbUri():
     db_user = os.environ.get('DB_USER')
@@ -22,5 +21,3 @@ def getDbUri():
             db_port,
             db_name)
     return URI
-
-db = SQLAlchemy()

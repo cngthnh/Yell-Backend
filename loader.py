@@ -1,10 +1,11 @@
 import os
 from flask import Flask
 from utils.definitions import *
-from database.utils import getDbUri, db
+from database.utils import getDbUri
 from database.models import *
 from utils.email import mail
 import secrets
+from flask_sqlalchemy import SQLAlchemy
 
 def loadDbConfigs():
     try:
@@ -52,6 +53,9 @@ def loadConfigs():
 
 # init Flask
 app = Flask(__name__)
+
+# init DB
+db = SQLAlchemy()
 
 # load env
 loadConfigs()

@@ -7,5 +7,4 @@ if __name__ == '__main__':
         db.session.commit()
     except InvalidRequestError:
         db.session.rollback()
-        raise Exception('Can\'t create tables')
     app.run(ssl_context='adhoc', host='0.0.0.0', port=os.environ.get('PORT', 80))
