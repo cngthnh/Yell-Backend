@@ -2,6 +2,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from .utils.cipher import *
 from flask import request, jsonify
 from .loader import *
+from .database.models import *
 from functools import wraps
 from .utils.email import sendVerificationEmail
 
