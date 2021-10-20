@@ -2,9 +2,10 @@ from sqlalchemy.exc import InvalidRequestError
 from core.routes import *
 
 if __name__ == '__main__':
-    db.create_all()
     try:
-        db.session.commit()
+        with app.app_context():
+            db.create_all()
+            db.session.commit()
     except InvalidRequestError:
         db.session.rollback()
         raise Exception('cant create tables')
