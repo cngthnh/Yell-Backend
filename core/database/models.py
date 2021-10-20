@@ -71,10 +71,3 @@ def changeAccountStatus(uid, email):
     except SQLAlchemyError:
         db.session.rollback()
         return False
-
-try:
-    db.create_all()
-    db.session.commit()
-except Exception as e:
-    raise Exception(str(e))
-    db.session.rollback()
