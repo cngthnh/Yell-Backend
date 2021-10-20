@@ -45,7 +45,7 @@ def getToken():
         if checkAccount(_uid, _hash):
             _tokenDict = {API_UID: _uid, API_HASH: _hash}
             return jsonify(token=generateToken(_tokenDict).decode('UTF-8'))
-        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
+        return jsonify(message=INACTIVATED_ACCOUNT_MESSAGE), 403
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
 
