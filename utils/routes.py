@@ -1,9 +1,9 @@
 from sqlalchemy.exc import SQLAlchemyError
-from utils.cipher import *
+from .cipher import *
 from flask import request, jsonify
-from loader import *
+from .loader import *
 from functools import wraps
-from utils.email import sendVerificationEmail
+from .email import sendVerificationEmail
 
 def tokenRequired(func):
     @wraps(func)

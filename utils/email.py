@@ -2,7 +2,7 @@ from flask_mail import Mail, Message
 import os
 
 import threading
-from utils.definitions import *
+from .definitions import *
 from flask import render_template, copy_current_request_context
 
 mail = Mail()

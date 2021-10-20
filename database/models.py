@@ -1,5 +1,5 @@
 from sqlalchemy.exc import SQLAlchemyError
-from loader import db
+from ..utils.loader import db
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 
