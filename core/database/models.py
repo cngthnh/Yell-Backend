@@ -76,5 +76,5 @@ try:
     db.create_all()
     db.session.commit()
 except Exception as e:
-    db.session.rollback()
     raise Exception(str(e))
+    db.session.rollback()
