@@ -1,4 +1,3 @@
-from sqlalchemy.exc import InvalidRequestError
 from core.routes import *
 
 if __name__ == '__main__':

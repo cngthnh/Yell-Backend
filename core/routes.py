@@ -5,6 +5,7 @@ from .loader import *
 from .database.models import *
 from functools import wraps
 from .utils.email import sendVerificationEmail
+import sys
 
 def tokenRequired(func):
     @wraps(func)
@@ -88,8 +89,10 @@ def createAccount():
 
     try:
         db.session.commit()
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
         db.session.rollback()
+        print(str(e))
+        sys.stdout.flush()
         return jsonify(message=FAILED_MESSAGE), 403
 
     sendVerificationEmail(_email, encode({'uid': _uid, 'email': _email}, EMAIL_VERIFICATION_TIME), _name)

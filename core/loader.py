@@ -53,9 +53,6 @@ def loadConfigs():
 # init Flask
 app = Flask(__name__)
 
-# init DB
-db = SQLAlchemy(app)
-
 # load env
 loadConfigs()
 
@@ -70,6 +67,9 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 app.config['DEBUG'] = True
+
+# init DB
+db = SQLAlchemy(app)
 
 with app.app_context():
     mail.init_app(app)
