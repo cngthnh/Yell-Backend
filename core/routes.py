@@ -145,3 +145,6 @@ def createTask(uid):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 403
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
