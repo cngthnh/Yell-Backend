@@ -57,4 +57,4 @@ jobs:
 
     # Push to Heroku
     - name: Push to Heroku
-      run: git push heroku master
+      run: git push heroku main
