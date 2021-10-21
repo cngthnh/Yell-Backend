@@ -34,19 +34,22 @@ class Task(db.Model):
     parent_id = db.Column(UUID(as_uuid=True), db.ForeignKey('task.id'), nullable=True)
     children = db.relationship('Task',
                 backref=db.backref('parent', remote_side=[id]))
-    status = db.Column(db.String)
-    notification_level = db.Column(db.Integer)
+    status = db.Column(db.Integer, default = 0)
+    notification_level = db.Column(db.Integer, default = 0)
     priority = db.Column(db.Integer, default = 0)
     name = db.Column(db.UnicodeText)
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     labels = db.Column(db.String, nullable=True)
 
-    def __init__(self, name, status, notification_level, priority, parent_id=None, start_time=None, end_time=None, labels=None):
+    def __init__(self, name, status = None, notification_level = None, priority = None, parent_id=None, start_time=None, end_time=None, labels=None):
         self.name = name
-        self.status = status
-        self.notification_level = notification_level
-        self.priority = priority
+        if status is not None:
+            self.status = int(status)
+        if notification_level is not None:
+            self.notification_level = int(notification_level)
+        if priority is not None:
+            self.priority = int(priority)
         if parent_id is not None:
             self.parent_id = parent_id
         if start_time is not None:

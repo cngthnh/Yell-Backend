@@ -9,10 +9,9 @@ from .utils.email import sendVerificationEmail
 def tokenRequired(func):
     @wraps(func)
     def tokenCheck(*args, **kwargs):
-
-        token = request.form.get(API_TOKEN)
-
-        if token is None:
+        try:
+            token = request.form[API_TOKEN]
+        except Exception:
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         # parse token => dict of info
@@ -27,7 +26,7 @@ def tokenRequired(func):
         except Exception:
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
-        return func(*args, **kwargs)
+        return func(*args, **kwargs, uid=infoDict[API_UID])
     return tokenCheck
 
 @app.route('/')
@@ -36,10 +35,10 @@ def homepage():
 
 @app.route(AUTH_ENDPOINT, methods=['POST'])
 def getToken():
-    _uid = request.form.get(API_UID)
-    _hash = request.form.get(API_HASH)
-
-    if (_uid is None or _hash is None):
+    try:
+        _uid = request.form[API_UID]
+        _hash = request.form[API_HASH]
+    except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
 
     try:
@@ -52,7 +51,7 @@ def getToken():
 
 @app.route(AUTHORIZED_TEST_ENDPOINT, methods=['POST'])
 @tokenRequired
-def authorized():
+def authorized(uid):
     return jsonify(message='AUTHORIZED'), 200
 
 @app.route(EMAIL_VRF_ENDPOINT + '<token>', methods=['GET'])
@@ -76,15 +75,12 @@ def verifyAccount(token):
 
 @app.route(SIGNUP_ENDPOINT, methods=['POST'])
 def createAccount():
-    _uid = request.form.get(API_UID)
-    _email = request.form.get(API_EMAIL)
-    _hash = request.form.get(API_HASH)
-    _name = request.form.get(API_USER_FULL_NAME)
-
-    if (_uid is None or
-        _hash is None or
-        _email is None or
-        _name is None):
+    try:
+        _uid = request.form[API_UID]
+        _email = request.form[API_EMAIL]
+        _hash = request.form[API_HASH]
+        _name = request.form[API_NAME]
+    except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
 
     user = UserAccount(_uid, _email, _name, _hash)
@@ -104,22 +100,48 @@ def createAccount():
 
 @app.route(EMAIL_CHECK_ENDPOINT, methods=['POST'])
 def checkEmailAvailability():
-
-    if request.form.get(API_EMAIL) is None:
+    try:
+        _email = request.form[API_EMAIL]
+    except Exception:
         return jsonify(message=INVALID_EMAIL_MESSAGE), 403
 
-    if db.session.query(UserAccount.email).filter_by(email=request.form.get(API_EMAIL)).first() is None:
+    if db.session.query(UserAccount.email).filter_by(email=_email).first() is None:
         return jsonify(message=OK_MESSAGE), 200
 
     return jsonify(message=INVALID_EMAIL_MESSAGE), 200
 
 @app.route(UID_CHECK_ENDPOINT, methods=['POST'])
 def checkUidAvailability():
+    try:
+        _uid = request.form[API_UID]
+    except Exception:
+        return jsonify(message=INVALID_EMAIL_MESSAGE), 403
 
-    if request.form.get(API_UID) is None:
-        return jsonify(message=INVALID_UID_MESSAGE), 403
-
-    if db.session.query(UserAccount.id).filter_by(id=request.form.get(API_UID)).first() is None:
+    if db.session.query(UserAccount.id).filter_by(id=_uid).first() is None:
         return jsonify(message=OK_MESSAGE), 200
 
     return jsonify(message=INVALID_UID_MESSAGE), 200
+
+@app.route(CREATE_TASK_ENDPOINT, methods=['POST'])
+@tokenRequired
+def createTask(uid):
+    try:
+        _name = request.form[API_NAME]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 403
+
+    task = Task(_name, 
+                request.form.get(API_STATUS), 
+                request.form.get(API_NOTI_LEVEL), 
+                request.form.get(API_PRIORITY),
+                request.form.get(API_PARENT_ID),
+                request.form.get(API_START_TIME),
+                request.form.get(API_END_TIME),
+                request.form.get(API_LABELS))
+    
+    db.session.query(UserAccount.id).filter_by(id=uid).update({'tasks': UserAccount.tasks.append(task)})
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
