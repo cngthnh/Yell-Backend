@@ -139,9 +139,11 @@ def createTask(uid):
                 request.form.get(API_END_TIME),
                 request.form.get(API_LABELS))
     
-    db.session.query(UserAccount.id).filter_by(id=uid).update({'tasks': UserAccount.tasks.append(task)})
+    currentUser = db.session.query(UserAccount).filter_by(id=uid).first()
+    currentUser.tasks.append(task)
 
     try:
+        db.session.add(currentUser)
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
