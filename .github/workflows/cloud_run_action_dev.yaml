@@ -49,14 +49,27 @@ jobs:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
 
-    # Add remote
-    - name: Add Heroku Remote
-      run: heroku git:remote --app $HEROKU_APP_NAME
+    # Docker build
+    - name: Docker Build
+      run: docker login --username=_ --password=$HEROKU_API_KEY registry.heroku.com
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+    - name: Publish
+      run: |
+        heroku container:push web -a $HEROKU_APP_NAME
+        heroku container:release web -a $HEROKU_APP_NAME
       env:
         HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME_DEV }}
 
-    # Push to Heroku
-    - name: Push to Heroku
-      run: |
-        git fetch --unshallow
-        git push heroku dev:master
+    # # Add remote
+    # - name: Add Heroku Remote
+    #   run: heroku git:remote --app $HEROKU_APP_NAME
+    #   env:
+    #     HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME_DEV }}
+
+    # # Push to Heroku
+    # - name: Push to Heroku
+    #   run: |
+    #     git fetch --unshallow
+    #     git push heroku dev:master
