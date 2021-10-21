@@ -57,7 +57,7 @@ app = Flask(__name__)
 loadConfigs()
 
 # init SQL database and email connection
-app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
