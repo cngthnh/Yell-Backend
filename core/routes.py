@@ -157,7 +157,12 @@ def createTask(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
 
-    task = Task(_name, 
+    currentDashboard = db.session.query(Dashboard).filter_by(id=_dashboardId, owner_id=uid).first()
+    if (currentDashboard is None):
+        return jsonify(message=INVALID_DASHBOARD_MESSAGE), 403
+
+    task = Task(_name,
+                _dashboardId,
                 request.form.get(API_STATUS), 
                 request.form.get(API_NOTI_LEVEL), 
                 request.form.get(API_PRIORITY),
@@ -166,9 +171,6 @@ def createTask(uid):
                 request.form.get(API_END_TIME),
                 request.form.get(API_LABELS))
     
-    currentDashboard = db.session.query(Dashboard).filter_by(id=_dashboardId, owner_id=uid).first()
-    if (currentDashboard is None):
-        return jsonify(message=INVALID_DASHBOARD_MESSAGE), 403
     currentDashboard.tasks.append(task)
 
     try:
@@ -210,6 +212,8 @@ def updateTask(uid):
         task.end_time = request.form[API_END_TIME]
     if API_LABELS in fields:
         task.labels = request.form[API_LABELS]
+    if API_DASHBOARD_ID in fields:
+        task.dashboard_id = request.form[API_DASHBOARD_ID]
 
     try:
         db.session.add(task)

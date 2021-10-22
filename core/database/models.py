@@ -56,8 +56,9 @@ class Task(db.Model):
     end_time = db.Column(db.DateTime, nullable=True)
     labels = db.Column(db.String, nullable=True)
 
-    def __init__(self, name, status = None, notification_level = None, priority = None, parent_id=None, start_time=None, end_time=None, labels=None):
+    def __init__(self, name, dashboard_id, status = None, notification_level = None, priority = None, parent_id=None, start_time=None, end_time=None, labels=None):
         self.name = name
+        self.dashboard_id = dashboard_id
         if status is not None:
             self.status = int(status)
         if notification_level is not None:
