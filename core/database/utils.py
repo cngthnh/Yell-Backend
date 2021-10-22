@@ -1,23 +1,19 @@
 import os
+from .models import *
 
-def getDbUri():
-    db_user = os.environ.get('DB_USER')
-    db_pass = os.environ.get('DB_PASS')
-    db_name = os.environ.get('DB_NAME')
-    db_host = os.environ.get('DB_HOST')
+def checkAccount(uid, hash):
+    result = db.session.query(UserAccount).filter_by(id = uid, hash = hash).first()
+    if (result is None):
+        return False
+    if (result.confirmed == False):
+        return False
+    return True
 
-    host_args = db_host.split(":")
-    if len(host_args) == 1:
-        db_hostname = db_host
-        db_port = os.environ.get("DB_PORT")
-    elif len(host_args) == 2:
-        db_hostname, db_port = host_args[0], int(host_args[1])
-
-    URI = '{}://{}:{}@{}:{}/{}'.format(
-            "postgresql+pg8000",
-            db_user,
-            db_pass,
-            db_hostname,
-            db_port,
-            db_name)
-    return URI
+def changeAccountStatus(uid, email):
+    db.session.query(UserAccount).filter_by(id = uid, email = email).update({'confirmed': True})
+    try:
+        db.session.commit()
+        return True
+    except SQLAlchemyError:
+        db.session.rollback()
+        return False

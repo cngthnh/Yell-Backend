@@ -34,42 +34,16 @@ jobs:
         echo "$YELL_MAIL_PASSWORD" > mail_password
         echo "$YELL_MAIN_URL_DEV" > main_url
 
-    # Login
-    - name: Heroku Login
-      run: |
-        cat > ~/.netrc <<EOF
-          machine api.heroku.com
-            login $HEROKU_EMAIL
-            password $HEROKU_API_KEY
-          machine git.heroku.com
-            login $HEROKU_EMAIL
-            password $HEROKU_API_KEY
-        EOF
-      env:
-        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
-
     # Docker build
     - name: Docker Build
       run: docker login --username=_ --password=$HEROKU_API_KEY registry.heroku.com
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
+    # Deploy to Heroku
     - name: Publish
       run: |
         heroku container:push web -a $HEROKU_APP_NAME
         heroku container:release web -a $HEROKU_APP_NAME
       env:
         HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME_DEV }}
-
-    # # Add remote
-    # - name: Add Heroku Remote
-    #   run: heroku git:remote --app $HEROKU_APP_NAME
-    #   env:
-    #     HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME_DEV }}
-
-    # # Push to Heroku
-    # - name: Push to Heroku
-    #   run: |
-    #     git fetch --unshallow
-    #     git push heroku dev:master

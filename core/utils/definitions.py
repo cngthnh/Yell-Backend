@@ -2,6 +2,7 @@
 YELL_ISSUER = 'Yell App by Yellion'
 EMAIL_VRF_TEMPLATE_HTML = 'email_verification_template.html'
 EMAIL_VRF_TEMPLATE_TXT = 'email_verification_template.txt'
+MAX_UID_LENGTH = 64
 
 ## Messages ##
 INVALID_TOKEN_MESSAGE = 'INVALID_TOKEN' # None / can't be decrypt / fault signature tokens
@@ -19,6 +20,7 @@ DEFAULT_EXPIRATION_TIME = 43800 # 1 month
 VERIFIED_MESSAGE = 'VERIFIED'
 INACTIVATED_ACCOUNT_MESSAGE = 'INACTIVATED_ACCOUNT'
 EXPIRED_TOKEN_MESSAGE = 'EXPIRED_TOKEN'
+INVALID_DASHBOARD_MESSAGE = 'INVALID_DASHBOARD'
 
 ## Key names ##
 ISSUER_KEY = 'iss'
@@ -39,6 +41,8 @@ API_PARENT_ID = 'parent_id'
 API_START_TIME = 'start_time'
 API_END_TIME = 'end_time'
 API_LABELS = 'labels'
+API_TASK_ID = 'task_id'
+API_DASHBOARD_ID = 'dashboard_id'
 
 # Endpoints
 EMAIL_VRF_ENDPOINT = '/api/account/verify/'
@@ -48,3 +52,6 @@ SIGNUP_ENDPOINT = '/api/account/sign_up'
 EMAIL_CHECK_ENDPOINT = '/api/account/email_check'
 UID_CHECK_ENDPOINT = '/api/account/uid_check'
 CREATE_TASK_ENDPOINT = '/api/task/create'
+UPDATE_TASK_ENDPOINT = '/api/task/update'
+CREATE_DASHBOARD_ENDPOINT = '/api/dashboard/create'
+UPDATE_DASHBOARD_ENDPOINT = '/api/dashboard/update'

@@ -2,7 +2,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from .utils.cipher import *
 from flask import request, jsonify
 from .loader import *
-from .database.models import *
+from .database.utils import *
 from functools import wraps
 from .utils.email import sendVerificationEmail
 import sys
@@ -125,13 +125,38 @@ def checkUidAvailability():
 
     return jsonify(message=INVALID_UID_MESSAGE), 200
 
+@app.route(CREATE_DASHBOARD_ENDPOINT, methods=['POST'])
+@tokenRequired
+def createDashboard(uid):
+    try:
+        _name = request.form[API_NAME]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 403
+
+    dashboard = Dashboard(_name, uid)
+    
+    currentUser = db.session.query(UserAccount).filter_by(id=uid).first()
+    currentUser.dashboards.append(dashboard)
+
+    try:
+        db.session.add(currentUser)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 403
+    
+    return jsonify(message=SUCCEED_MESSAGE, task_id=dashboard.id), 200
+
 @app.route(CREATE_TASK_ENDPOINT, methods=['POST'])
 @tokenRequired
 def createTask(uid):
     try:
         _name = request.form[API_NAME]
+        _dashboardId = request.form[API_DASHBOARD_ID]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
+
+
 
     task = Task(_name, 
                 request.form.get(API_STATUS), 
@@ -142,13 +167,55 @@ def createTask(uid):
                 request.form.get(API_END_TIME),
                 request.form.get(API_LABELS))
     
-    currentUser = db.session.query(UserAccount).filter_by(id=uid).first()
-    currentUser.tasks.append(task)
+    currentDashboard = db.session.query(Dashboard).filter_by(id=_dashboardId, owner_id=uid).first()
+    if (currentDashboard is None):
+        return jsonify(message=INVALID_DASHBOARD_MESSAGE), 403
+    currentDashboard.tasks.append(task)
 
     try:
-        db.session.add(currentUser)
+        db.session.add(currentDashboard)
         db.session.commit()
     except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 403
+    
+    return jsonify(message=SUCCEED_MESSAGE, task_id=task.id), 200
+
+@app.route(UPDATE_TASK_ENDPOINT, methods=['POST'])
+@tokenRequired
+def updateTask(uid):
+    try:
+        _taskId = request.form[API_TASK_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 403
+
+    dashboards = db.session.query(Dashboard).filter(Dashboard.owner_id==uid).subquery()
+    task = db.session.query(Task).filter(Task.dashboard_id.in_(dashboards), Task.id==_taskId).first()
+
+    fields = request.form.keys()
+    if API_NAME in fields:
+        task.name = request.form[API_NAME]
+    if API_STATUS in fields:
+        task.status = request.form[API_STATUS]
+    if API_NOTI_LEVEL in fields:
+        task.notification_level = request.form[API_NOTI_LEVEL]
+    if API_PRIORITY in fields:
+        task.priority = request.form[API_PRIORITY]
+    if API_PARENT_ID in fields:
+        task.parent_id = request.form[API_PARENT_ID]
+    if API_START_TIME in fields:
+        task.start_time = request.form[API_START_TIME]
+    if API_END_TIME in fields:
+        task.end_time = request.form[API_END_TIME]
+    if API_LABELS in fields:
+        task.labels = request.form[API_LABELS]
+
+    try:
+        db.session.add(task)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 403
     

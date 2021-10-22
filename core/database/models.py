@@ -1,24 +1,23 @@
 from sqlalchemy.exc import SQLAlchemyError
+
+from ..utils.definitions import MAX_UID_LENGTH
 from ..loader import db
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 
-usersTasks = db.Table('users_tasks',
-    db.Column('user_id', db.String(64), db.ForeignKey('user_account.id'), primary_key=True),
+usersDashboards = db.Table('users_dashboards',
+    db.Column('dashboard_id', UUID(as_uuid=True), db.ForeignKey('dashboard.id'), primary_key=True),
     db.Column('task_id', UUID(as_uuid=True), db.ForeignKey('task.id'), primary_key=True),
 )
 
 class UserAccount(db.Model):
     __tablename__ = 'user_account'
-    id = db.Column(db.String(64), primary_key=True)
+    id = db.Column(db.String(MAX_UID_LENGTH), primary_key=True)
     email = db.Column(db.Text, unique=True)
     name = db.Column(db.UnicodeText)
     hash = db.Column(db.String(64))
     confirmed = db.Column(db.Boolean)
-    tasks = db.relationship('Task', 
-            secondary=usersTasks, 
-            lazy='subquery',
-            backref=db.backref('accounts', lazy=True))
+    dashboards = db.relationship('Dashboard', backref='owner', lazy=True)
     funds = db.relationship('Fund', backref='owner', lazy=True)
 
     def __init__(self, id, email, name, hash):
@@ -27,13 +26,28 @@ class UserAccount(db.Model):
         self.name = name
         self.hash = hash
         self.confirmed = False
-    
+
+class Dashboard(db.Model):
+    __tablename__ = 'dashboard'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    name = db.Column(db.UnicodeText)
+    tasks = db.relationship('Task', 
+            secondary=usersDashboards, 
+            lazy='subquery',
+            backref=db.backref('dashboards', lazy=True))
+    owner_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), nullable=False)
+
+    def __init__(self, name, owner_id):
+        self.name = name
+        self.owner_id = owner_id
+
 class Task(db.Model):
     __tablename__ = 'task'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     parent_id = db.Column(UUID(as_uuid=True), db.ForeignKey('task.id'), nullable=True)
     children = db.relationship('Task',
                 backref=db.backref('parent', remote_side=[id]))
+    dashboard_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('dashboard.id'), nullable=False)
     status = db.Column(db.Integer, default = 0)
     notification_level = db.Column(db.Integer, default = 0)
     priority = db.Column(db.Integer, default = 0)
@@ -62,7 +76,7 @@ class Task(db.Model):
 class Fund(db.Model):
     __tablename__ = 'fund'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    owner_id = db.Column(db.String(64), db.ForeignKey('user_account.id'), nullable=False)
+    owner_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), nullable=False)
     name = db.Column(db.UnicodeText, nullable=False)
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
@@ -96,23 +110,6 @@ class Expenditure(db.Model):
             self.used_for = used_for
         if time is not None:
             self.time = time
-
-def checkAccount(uid, hash):
-    result = db.session.query(UserAccount).filter_by(id = uid, hash = hash).first()
-    if (result is None):
-        return False
-    if (result.confirmed == False):
-        return False
-    return True
-
-def changeAccountStatus(uid, email):
-    db.session.query(UserAccount).filter_by(id = uid, email = email).update({'confirmed': True})
-    try:
-        db.session.commit()
-        return True
-    except SQLAlchemyError:
-        db.session.rollback()
-        return False
     
 try:
     db.create_all()

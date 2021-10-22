@@ -1,7 +1,6 @@
 import os
 from flask import Flask
 from .utils.definitions import *
-from .database.utils import getDbUri
 from .utils.email import mail
 import secrets
 from flask_sqlalchemy import SQLAlchemy
