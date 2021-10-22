@@ -1,5 +1,5 @@
 from sqlalchemy.exc import SQLAlchemyError
-
+import sys
 from ..utils.definitions import MAX_UID_LENGTH
 from ..loader import db
 import uuid
@@ -114,5 +114,7 @@ class Expenditure(db.Model):
 try:
     db.create_all()
     db.session.commit()
-except Exception:
+except Exception as e:
+    print(str(e))
+    sys.stdout.flush()
     db.session.rollback()

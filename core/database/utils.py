@@ -1,4 +1,3 @@
-import os
 from .models import *
 
 def checkAccount(uid, hash):
