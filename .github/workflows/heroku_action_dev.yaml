@@ -16,23 +16,15 @@ jobs:
       env:
         YELL_SIG_KEY: ${{ secrets.YELL_HS256_KEY }}
         YELL_ENC_KEY: ${{ secrets.YELL_A256GCM_KEY }}
-        YELL_DB_USER: ${{ secrets.YELL_DB_USER }}
-        YELL_DB_PASS: ${{ secrets.YELL_DB_PASS }}
-        YELL_DB_HOST: ${{ secrets.YELL_DB_HOST }}
-        YELL_DB_NAME: ${{ secrets.YELL_DB_NAME }}
         YELL_MAIL_USERNAME: ${{ secrets.YELL_MAIL_USERNAME }}
         YELL_MAIL_PASSWORD: ${{ secrets.YELL_MAIL_PASSWORD }}
-        YELL_MAIN_URL_DEV: ${{ secrets.YELL_MAIN_URL_DEV }}
+        YELL_MAIN_URL: ${{ secrets.YELL_MAIN_URL_DEV }}
       run: |
         echo "$YELL_SIG_KEY" > sig
         echo "$YELL_ENC_KEY" > enc
-        echo "$YELL_DB_USER" > db_user
-        echo "$YELL_DB_PASS" > db_pass
-        echo "$YELL_DB_HOST" > db_host
-        echo "$YELL_DB_NAME" > db_name
         echo "$YELL_MAIL_USERNAME" > mail_username
         echo "$YELL_MAIL_PASSWORD" > mail_password
-        echo "$YELL_MAIN_URL_DEV" > main_url
+        echo "$YELL_MAIN_URL" > main_url
 
     # Login
     - name: Heroku Login

@@ -146,7 +146,7 @@ def createDashboard(uid):
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 403
     
-    return jsonify(message=SUCCEED_MESSAGE, task_id=dashboard.id), 200
+    return jsonify(message=SUCCEED_MESSAGE, dashboard_id=dashboard.id), 200
 
 @app.route(CREATE_TASK_ENDPOINT, methods=['POST'])
 @tokenRequired
@@ -192,7 +192,7 @@ def updateTask(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
 
-    dashboards = db.session.query(Dashboard).filter(Dashboard.owner_id==uid).subquery()
+    dashboards = db.session.query(Dashboard.id).filter(Dashboard.owner_id==uid).subquery()
     task = db.session.query(Task).filter(Task.dashboard_id.in_(dashboards), Task.id==_taskId).first()
 
     fields = request.form.keys()
