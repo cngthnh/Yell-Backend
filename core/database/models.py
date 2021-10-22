@@ -47,7 +47,7 @@ class Task(db.Model):
     parent_id = db.Column(UUID(as_uuid=True), db.ForeignKey('task.id'), nullable=True)
     children = db.relationship('Task',
                 backref=db.backref('parent', remote_side=[id]))
-    dashboard_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('dashboard.id'), nullable=False)
+    dashboard_id = db.Column(UUID(as_uuid=True), db.ForeignKey('dashboard.id'), nullable=False)
     status = db.Column(db.Integer, default = 0)
     notification_level = db.Column(db.Integer, default = 0)
     priority = db.Column(db.Integer, default = 0)
