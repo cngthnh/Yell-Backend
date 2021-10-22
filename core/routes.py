@@ -157,8 +157,6 @@ def createTask(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
 
-
-
     task = Task(_name, 
                 request.form.get(API_STATUS), 
                 request.form.get(API_NOTI_LEVEL), 
@@ -177,6 +175,8 @@ def createTask(uid):
         db.session.add(currentDashboard)
         db.session.commit()
     except SQLAlchemyError:
+        print(str(e))
+        sys.stdout.flush()
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 403
     
