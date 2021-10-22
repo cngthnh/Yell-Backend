@@ -192,8 +192,8 @@ def updateTask(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
 
-    dashboards = db.session.query(Dashboard.id).filter(Dashboard.owner_id==uid).subquery()
-    task = db.session.query(Task).filter(Task.dashboard_id.in_(dashboards), Task.id==_taskId).first()
+    #dashboards = db.session.query(Dashboard.id).filter(Dashboard.owner_id==uid).subquery()
+    task = db.session.query(Task).filter(Task.dashboard_id.in_(db.session.query(Dashboard.id).filter(Dashboard.owner_id==uid)), Task.id==_taskId).first()
 
     fields = request.form.keys()
     if API_NAME in fields:
