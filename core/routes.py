@@ -229,12 +229,12 @@ def updateTask(uid):
     
     return jsonify(message=SUCCEED_MESSAGE), 200
 
-@app.route(GET_USER_PROFILE_ENDPOINT, methods='GET')
+@app.route(GET_USER_PROFILE_ENDPOINT, methods=['GET'])
 @tokenRequired
 def getUserProfile():
     pass
 
-@app.route('/.well-known/pki-validation/3151765195121080605031DCC5DFFEE6.txt', methods='GET')
+@app.route('/.well-known/pki-validation/3151765195121080605031DCC5DFFEE6.txt', methods=['GET'])
 @tokenRequired
 def sslVerify():
     return (open('3151765195121080605031DCC5DFFEE6.txt').read()), 200
