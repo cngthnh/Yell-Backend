@@ -16,8 +16,8 @@ def tokenRequired(func):
         except Exception:
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
-        scheme, token = token.split(maxsplit=1)
-        if scheme!='Bearer':
+        schema, token = token.split(maxsplit=1)
+        if schema!='Bearer':
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         # parse token => dict of info
@@ -240,6 +240,6 @@ def getUserProfile(uid, user_id):
     user = db.session.query(UserAccount).filter_by(id=uid).first()
 
     if (user is not None):
-        return jsonify(user), 200
-        
+        return jsonify(user.json()), 200
+
     return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404

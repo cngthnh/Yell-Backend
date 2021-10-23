@@ -26,6 +26,16 @@ class UserAccount(db.Model):
         self.name = name
         self.hash = hash
         self.confirmed = False
+    
+    def json(self):
+        jsonified = {
+            'id': self.id,
+            'email': self.email,
+            'name': self.name,
+            'dashboards': self.dashboards,
+            'funds': self.funds
+        }
+        return jsonified
 
 class Dashboard(db.Model):
     __tablename__ = 'dashboard'
