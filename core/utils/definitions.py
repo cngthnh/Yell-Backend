@@ -31,7 +31,6 @@ EXPIRATION_KEY = 'exp'
 NOT_BEFORE_KEY = 'nbf'
 
 ## Definitions for API key names ##
-API_TOKEN = 'token'
 API_UID = 'uid'
 API_HASH = 'hash'
 API_EMAIL = 'email'
@@ -47,8 +46,16 @@ API_TASK_ID = 'task_id'
 API_DASHBOARD_ID = 'dashboard_id'
 API_DASHBOARDS = 'dashboards'
 API_FUNDS = 'funds'
+API_FUND_ID = 'fund_id'
 API_SUBTASKS = 'subtasks'
 API_TASKS = 'tasks'
+API_BALANCE = 'balance'
+API_THRESHOLD = 'threshold'
+API_EXPENDITURES = 'expenditures'
+API_EXPENDITURE_ID = 'exp_id'
+API_PURPOSES = 'purposes'
+API_TIME = 'time'
+API_SPENDING = 'spending'
 
 # Endpoints
 GET_USER_ENDPOINT = '/api/users/<user_id>' # GET

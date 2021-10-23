@@ -146,11 +146,29 @@ class Fund(db.Model):
         if threshold is not None:
             self.threshold = threshold
 
+    def dict(self):
+        expenditureDetails = []
+
+        for exp in self.expenditures:
+            expenditureDetails.append(exp.dict())
+
+        result = {
+            API_FUND_ID: str(self.id),
+            API_NAME: self.name,
+            API_START_TIME: self.start_time,
+            API_END_TIME: self.end_time,
+            API_BALANCE: self.balance,
+            API_THRESHOLD: self.threshold,
+            API_EXPENDITURES: expenditureDetails
+        }
+
+        return result
+
 class Expenditure(db.Model):
     __tablename__ = 'expenditure'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     fund_id = db.Column(UUID(as_uuid=True), db.ForeignKey('fund.id'), nullable=False)
-    used_for = db.Column(db.UnicodeText, nullable=True)
+    purposes = db.Column(db.UnicodeText, nullable=True)
     time = db.Column(db.DateTime, nullable=True)
     spending = db.Column(db.BigInteger, nullable=False)
 
@@ -162,6 +180,16 @@ class Expenditure(db.Model):
         if time is not None:
             self.time = time
     
+    def dict(self):
+        result = {
+            API_EXPENDITURE_ID: str(self.id),
+            API_FUND_ID: str(self.fund_id),
+            API_PURPOSES: self.purposes,
+            API_TIME: self.time,
+            API_SPENDING: self.spending
+        }
+        return result
+
 try:
     db.create_all()
     db.session.commit()
