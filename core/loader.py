@@ -38,7 +38,7 @@ def loadConfigs():
 
 # init Flask
 app = Flask(__name__)
-talisman = Talisman(app)
+Talisman(app)
 
 # load env
 loadConfigs()
