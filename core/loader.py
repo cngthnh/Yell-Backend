@@ -4,6 +4,7 @@ from .utils.definitions import *
 from .utils.email import mail
 import secrets
 from flask_sqlalchemy import SQLAlchemy
+from flask_talisman import Talisman
 
 def loadKeys():
     try:
@@ -37,6 +38,7 @@ def loadConfigs():
 
 # init Flask
 app = Flask(__name__)
+talisman = Talisman(app)
 
 # load env
 loadConfigs()

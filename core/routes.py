@@ -233,7 +233,3 @@ def updateTask(uid):
 @tokenRequired
 def getUserProfile():
     pass
-
-@app.route('/.well-known/pki-validation/3151765195121080605031DCC5DFFEE6.txt', methods=['GET'])
-def sslVerify():
-    return (open('3151765195121080605031DCC5DFFEE6.txt').read()), 200

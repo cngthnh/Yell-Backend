@@ -5,3 +5,4 @@ python-jose[cryptography]
 Flask-SQLAlchemy
 psycopg2
 Flask-Mail
+Flask-Talisman
