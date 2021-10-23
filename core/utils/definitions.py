@@ -45,17 +45,14 @@ API_TASK_ID = 'task_id'
 API_DASHBOARD_ID = 'dashboard_id'
 
 # Endpoints
-GET_USER_PROFILE_ENDPOINT = '/api/user/<user_id>'
-EMAIL_VRF_ENDPOINT = '/api/users/verify/<token>'
+GET_USER_ENDPOINT = '/api/users/<user_id>' # GET
+USERS_ENDPOINT = '/api/users' # POST, PATCH, DELETE
+EMAIL_VRF_ENDPOINT = '/api/users/verify/<token>' # GET
 EMAIL_VRF_SIGNATURE = '/api/users/verify/'
-AUTH_ENDPOINT = '/api/users/auth'
-AUTHORIZED_TEST_ENDPOINT = '/api/users/authorized'
-SIGNUP_ENDPOINT = '/api/users/create'
-EMAIL_CHECK_ENDPOINT = '/api/users/check/email'
-UID_CHECK_ENDPOINT = '/api/users/check/uid'
-CREATE_TASK_ENDPOINT = '/api/tasks/create'
-UPDATE_TASK_ENDPOINT = '/api/tasks/update'
-CREATE_DASHBOARD_ENDPOINT = '/api/dashboards/create'
-UPDATE_DASHBOARD_ENDPOINT = '/api/dashboards/update'
-GET_DASHBOARD_ENDPOINT = '/api/dashboard/<dashboard_id>'
-GET_TASK_ENDPOINT = '/api/task/<task_id>'
+AUTH_ENDPOINT = '/api/users/auth' # POST
+AUTHORIZED_TEST_ENDPOINT = '/api/users/authorized' 
+USERS_CHECK_ENDPOINT = '/api/users/check' # GET
+TASKS_ENDPOINT = '/api/tasks' # POST, PATCH, DELETE
+GET_TASK_ENDPOINT = '/api/tasks/<task_id>' # GET
+DASHBOARDS_ENDPOINT = '/api/dashboards' # POST, PATCH, DELETE
+GET_DASHBOARD_ENDPOINT = '/api/dashboards/<dashboard_id>' # GET

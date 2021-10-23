@@ -16,7 +16,7 @@ def tokenRequired(func):
         except Exception:
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
-        scheme, token = token.split(' ')
+        scheme, token = token.split(maxsplit=1)
         if scheme!='Bearer':
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
@@ -42,8 +42,9 @@ def homepage():
 @app.route(AUTH_ENDPOINT, methods=['POST'])
 def getToken():
     try:
-        _uid = request.form[API_UID]
-        _hash = request.form[API_HASH]
+        data = request.get_json()
+        _uid = data[API_UID]
+        _hash = data[API_HASH]
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
@@ -72,20 +73,21 @@ def verifyAccount(token):
 
     try:
         result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
-    except Exception as e:
+    except Exception:
         return jsonify(message='INVALID_TOKEN_MESSAGE'), 403
     if result == True:
         return jsonify(message=VERIFIED_MESSAGE), 200
     else:
         return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
-@app.route(SIGNUP_ENDPOINT, methods=['POST'])
+@app.route(USERS_ENDPOINT, methods=['POST'])
 def createAccount():
     try:
-        _uid = request.form[API_UID]
-        _email = request.form[API_EMAIL]
-        _hash = request.form[API_HASH]
-        _name = request.form[API_NAME]
+        data = request.get_json()
+        _uid = data[API_UID]
+        _email = data[API_EMAIL]
+        _hash = data[API_HASH]
+        _name = data[API_NAME]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
 
@@ -106,35 +108,33 @@ def createAccount():
 
     return jsonify(message=PENDING_VERIFICATION_MESSAGE, token = token), 201
 
-@app.route(EMAIL_CHECK_ENDPOINT, methods=['GET'])
-def checkEmailAvailability():
-    try:
-        _email = request.args[API_EMAIL]
-    except Exception:
+@app.route(USERS_CHECK_ENDPOINT, methods=['GET'])
+def checkAvailability():
+    _email = request.args.get(API_EMAIL)
+    _uid = request.args.get(API_UID)
+
+    if (_email is None and _uid is None):
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    elif ((_email is not None) and (_uid is not None)):
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    elif (_uid is None):
+        if db.session.query(UserAccount.email).filter_by(email=_email).first() is None:
+            return jsonify(message=OK_MESSAGE), 200
         return jsonify(message=INVALID_EMAIL_MESSAGE), 409
+    
+    else:
+        if db.session.query(UserAccount.id).filter_by(id=_uid).first() is None:
+            return jsonify(message=OK_MESSAGE), 200
+        return jsonify(message=INVALID_UID_MESSAGE), 409
 
-    if db.session.query(UserAccount.email).filter_by(email=_email).first() is None:
-        return jsonify(message=OK_MESSAGE), 200
-
-    return jsonify(message=INVALID_EMAIL_MESSAGE), 409
-
-@app.route(UID_CHECK_ENDPOINT, methods=['GET'])
-def checkUidAvailability():
-    try:
-        _uid = request.args[API_UID]
-    except Exception:
-        return jsonify(message=INVALID_EMAIL_MESSAGE), 409
-
-    if db.session.query(UserAccount.id).filter_by(id=_uid).first() is None:
-        return jsonify(message=OK_MESSAGE), 200
-
-    return jsonify(message=INVALID_UID_MESSAGE), 409
-
-@app.route(CREATE_DASHBOARD_ENDPOINT, methods=['POST'])
+@app.route(DASHBOARDS_ENDPOINT, methods=['POST'])
 @tokenRequired
 def createDashboard(uid):
     try:
-        _name = request.form[API_NAME]
+        data = request.get_json()
+        _name = data[API_NAME]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
 
@@ -152,12 +152,13 @@ def createDashboard(uid):
     
     return jsonify(message=SUCCEED_MESSAGE, dashboard_id=dashboard.id), 201
 
-@app.route(CREATE_TASK_ENDPOINT, methods=['POST'])
+@app.route(TASKS_ENDPOINT, methods=['POST'])
 @tokenRequired
 def createTask(uid):
     try:
-        _name = request.form[API_NAME]
-        _dashboardId = request.form[API_DASHBOARD_ID]
+        data = request.get_json()
+        _name = data[API_NAME]
+        _dashboardId = data[API_DASHBOARD_ID]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
 
@@ -167,13 +168,13 @@ def createTask(uid):
 
     task = Task(_name,
                 _dashboardId,
-                request.form.get(API_STATUS), 
-                request.form.get(API_NOTI_LEVEL), 
-                request.form.get(API_PRIORITY),
-                request.form.get(API_PARENT_ID),
-                request.form.get(API_START_TIME),
-                request.form.get(API_END_TIME),
-                request.form.get(API_LABELS))
+                data.get(API_STATUS), 
+                data.get(API_NOTI_LEVEL), 
+                data.get(API_PRIORITY),
+                data.get(API_PARENT_ID),
+                data.get(API_START_TIME),
+                data.get(API_END_TIME),
+                data.get(API_LABELS))
     
     currentDashboard.tasks.append(task)
 
@@ -188,35 +189,36 @@ def createTask(uid):
     
     return jsonify(message=SUCCEED_MESSAGE, task_id=task.id), 201
 
-@app.route(UPDATE_TASK_ENDPOINT, methods=['POST'])
+@app.route(TASKS_ENDPOINT, methods=['PATCH'])
 @tokenRequired
 def updateTask(uid):
     try:
-        _taskId = request.form[API_TASK_ID]
+        data = request.get_json()
+        _taskId = data[API_TASK_ID]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
 
     task = db.session.query(Task).filter(Task.dashboard_id.in_(db.session.query(Dashboard.id).filter(Dashboard.owner_id==uid)), Task.id==_taskId).first()
 
-    fields = request.form.keys()
+    fields = data.keys()
     if API_NAME in fields:
-        task.name = request.form[API_NAME]
+        task.name = data[API_NAME]
     if API_STATUS in fields:
-        task.status = request.form[API_STATUS]
+        task.status = data[API_STATUS]
     if API_NOTI_LEVEL in fields:
-        task.notification_level = request.form[API_NOTI_LEVEL]
+        task.notification_level = data[API_NOTI_LEVEL]
     if API_PRIORITY in fields:
-        task.priority = request.form[API_PRIORITY]
+        task.priority = data[API_PRIORITY]
     if API_PARENT_ID in fields:
-        task.parent_id = request.form[API_PARENT_ID]
+        task.parent_id = data[API_PARENT_ID]
     if API_START_TIME in fields:
-        task.start_time = request.form[API_START_TIME]
+        task.start_time = data[API_START_TIME]
     if API_END_TIME in fields:
-        task.end_time = request.form[API_END_TIME]
+        task.end_time = data[API_END_TIME]
     if API_LABELS in fields:
-        task.labels = request.form[API_LABELS]
+        task.labels = data[API_LABELS]
     if API_DASHBOARD_ID in fields:
-        task.dashboard_id = request.form[API_DASHBOARD_ID]
+        task.dashboard_id = data[API_DASHBOARD_ID]
 
     try:
         db.session.add(task)
@@ -229,7 +231,7 @@ def updateTask(uid):
     
     return jsonify(message=SUCCEED_MESSAGE), 200
 
-@app.route(GET_USER_PROFILE_ENDPOINT, methods=['GET'])
+@app.route(GET_USER_ENDPOINT, methods=['GET'])
 @tokenRequired
 def getUserProfile():
     pass
