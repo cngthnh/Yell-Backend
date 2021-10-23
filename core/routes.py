@@ -12,8 +12,12 @@ def tokenRequired(func):
     @wraps(func)
     def tokenCheck(*args, **kwargs):
         try:
-            token = request.form[API_TOKEN]
+            token = request.headers['Authorization']
         except Exception:
+            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+
+        scheme, token = token.split(' ')
+        if scheme!='Bearer':
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         # parse token => dict of info
@@ -41,22 +45,22 @@ def getToken():
         _uid = request.form[API_UID]
         _hash = request.form[API_HASH]
     except Exception:
-        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
+        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
     try:
         if checkAccount(_uid, _hash):
             _tokenDict = {API_UID: _uid, API_HASH: _hash}
             return jsonify(token=generateToken(_tokenDict).decode('UTF-8'))
-        return jsonify(message=INACTIVATED_ACCOUNT_MESSAGE), 403
+        return jsonify(message=INACTIVATED_ACCOUNT_MESSAGE), 401
     except Exception:
-        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 403
+        return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
 @app.route(AUTHORIZED_TEST_ENDPOINT, methods=['POST'])
 @tokenRequired
 def authorized(uid):
     return jsonify(message='AUTHORIZED'), 200
 
-@app.route(EMAIL_VRF_ENDPOINT + '<token>', methods=['GET'])
+@app.route(EMAIL_VRF_ENDPOINT, methods=['GET'])
 def verifyAccount(token):
     if not verifyToken(token):
         return jsonify(message=INVALID_TOKEN_MESSAGE), 403
@@ -100,31 +104,31 @@ def createAccount():
 
     token = generateToken({API_UID: _uid, API_HASH: _hash}).decode('UTF-8')
 
-    return jsonify(message=PENDING_VERIFICATION_MESSAGE, token = token), 200
+    return jsonify(message=PENDING_VERIFICATION_MESSAGE, token = token), 201
 
-@app.route(EMAIL_CHECK_ENDPOINT, methods=['POST'])
+@app.route(EMAIL_CHECK_ENDPOINT, methods=['GET'])
 def checkEmailAvailability():
     try:
-        _email = request.form[API_EMAIL]
+        _email = request.args[API_EMAIL]
     except Exception:
-        return jsonify(message=INVALID_EMAIL_MESSAGE), 403
+        return jsonify(message=INVALID_EMAIL_MESSAGE), 409
 
     if db.session.query(UserAccount.email).filter_by(email=_email).first() is None:
         return jsonify(message=OK_MESSAGE), 200
 
-    return jsonify(message=INVALID_EMAIL_MESSAGE), 200
+    return jsonify(message=INVALID_EMAIL_MESSAGE), 409
 
-@app.route(UID_CHECK_ENDPOINT, methods=['POST'])
+@app.route(UID_CHECK_ENDPOINT, methods=['GET'])
 def checkUidAvailability():
     try:
-        _uid = request.form[API_UID]
+        _uid = request.args[API_UID]
     except Exception:
-        return jsonify(message=INVALID_EMAIL_MESSAGE), 403
+        return jsonify(message=INVALID_EMAIL_MESSAGE), 409
 
     if db.session.query(UserAccount.id).filter_by(id=_uid).first() is None:
         return jsonify(message=OK_MESSAGE), 200
 
-    return jsonify(message=INVALID_UID_MESSAGE), 200
+    return jsonify(message=INVALID_UID_MESSAGE), 409
 
 @app.route(CREATE_DASHBOARD_ENDPOINT, methods=['POST'])
 @tokenRequired
@@ -146,7 +150,7 @@ def createDashboard(uid):
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 403
     
-    return jsonify(message=SUCCEED_MESSAGE, dashboard_id=dashboard.id), 200
+    return jsonify(message=SUCCEED_MESSAGE, dashboard_id=dashboard.id), 201
 
 @app.route(CREATE_TASK_ENDPOINT, methods=['POST'])
 @tokenRequired
@@ -182,7 +186,7 @@ def createTask(uid):
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 403
     
-    return jsonify(message=SUCCEED_MESSAGE, task_id=task.id), 200
+    return jsonify(message=SUCCEED_MESSAGE, task_id=task.id), 201
 
 @app.route(UPDATE_TASK_ENDPOINT, methods=['POST'])
 @tokenRequired
@@ -192,7 +196,6 @@ def updateTask(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 403
 
-    #dashboards = db.session.query(Dashboard.id).filter(Dashboard.owner_id==uid).subquery()
     task = db.session.query(Task).filter(Task.dashboard_id.in_(db.session.query(Dashboard.id).filter(Dashboard.owner_id==uid)), Task.id==_taskId).first()
 
     fields = request.form.keys()
@@ -225,3 +228,13 @@ def updateTask(uid):
         return jsonify(message=FAILED_MESSAGE), 403
     
     return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(GET_USER_PROFILE_ENDPOINT, methods='GET')
+@tokenRequired
+def getUserProfile():
+    pass
+
+@app.route('/.well-known/pki-validation/3151765195121080605031DCC5DFFEE6.txt', methods='GET')
+@tokenRequired
+def sslVerify():
+    return (open('3151765195121080605031DCC5DFFEE6.txt').read()), 200
