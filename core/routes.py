@@ -74,7 +74,7 @@ def verifyAccount(token):
     try:
         result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
     except Exception:
-        return jsonify(message='INVALID_TOKEN_MESSAGE'), 403
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
     if result == True:
         return jsonify(message=VERIFIED_MESSAGE), 200
     else:
@@ -89,7 +89,7 @@ def createAccount():
         _hash = data[API_HASH]
         _name = data[API_NAME]
     except Exception:
-        return jsonify(message=INVALID_DATA_MESSAGE), 403
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     user = UserAccount(_uid, _email, _name, _hash)
     db.session.add(user)
@@ -100,7 +100,7 @@ def createAccount():
         db.session.rollback()
         print(str(e))
         sys.stdout.flush()
-        return jsonify(message=FAILED_MESSAGE), 403
+        return jsonify(message=FAILED_MESSAGE), 400
 
     sendVerificationEmail(_email, encode({'uid': _uid, 'email': _email}, EMAIL_VERIFICATION_TIME), _name)
 
@@ -136,7 +136,7 @@ def createDashboard(uid):
         data = request.get_json()
         _name = data[API_NAME]
     except Exception:
-        return jsonify(message=INVALID_DATA_MESSAGE), 403
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     dashboard = Dashboard(_name, uid)
     
@@ -148,7 +148,7 @@ def createDashboard(uid):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return jsonify(message=FAILED_MESSAGE), 403
+        return jsonify(message=FAILED_MESSAGE), 400
     
     return jsonify(message=SUCCEED_MESSAGE, dashboard_id=dashboard.id), 201
 
@@ -160,7 +160,7 @@ def createTask(uid):
         _name = data[API_NAME]
         _dashboardId = data[API_DASHBOARD_ID]
     except Exception:
-        return jsonify(message=INVALID_DATA_MESSAGE), 403
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     currentDashboard = db.session.query(Dashboard).filter_by(id=_dashboardId, owner_id=uid).first()
     if (currentDashboard is None):
@@ -185,7 +185,7 @@ def createTask(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return jsonify(message=FAILED_MESSAGE), 403
+        return jsonify(message=FAILED_MESSAGE), 400
     
     return jsonify(message=SUCCEED_MESSAGE, task_id=task.id), 201
 
@@ -196,7 +196,7 @@ def updateTask(uid):
         data = request.get_json()
         _taskId = data[API_TASK_ID]
     except Exception:
-        return jsonify(message=INVALID_DATA_MESSAGE), 403
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     task = db.session.query(Task).filter(Task.dashboard_id.in_(db.session.query(Dashboard.id).filter(Dashboard.owner_id==uid)), Task.id==_taskId).first()
 
@@ -227,11 +227,19 @@ def updateTask(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return jsonify(message=FAILED_MESSAGE), 403
+        return jsonify(message=FAILED_MESSAGE), 400
     
     return jsonify(message=SUCCEED_MESSAGE), 200
 
 @app.route(GET_USER_ENDPOINT, methods=['GET'])
 @tokenRequired
-def getUserProfile():
-    pass
+def getUserProfile(uid, user_id):
+    if (uid!=user_id):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+    
+    user = db.session.query(UserAccount).filter_by(id=uid).first()
+
+    if (user is not None):
+        return jsonify(user), 200
+        
+    return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404
