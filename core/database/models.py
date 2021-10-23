@@ -4,7 +4,6 @@ from ..utils.definitions import MAX_UID_LENGTH
 from ..loader import db
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
-import json
 
 usersDashboards = db.Table('users_dashboards',
     db.Column('dashboard_id', UUID(as_uuid=True), db.ForeignKey('dashboard.id'), primary_key=True),
@@ -33,10 +32,10 @@ class UserAccount(db.Model):
             'id': self.id,
             'email': self.email,
             'name': self.name,
-            'dashboards': self.dashboards,
-            'funds': self.funds
+            'dashboards': db.session.query(Dashboard.id).filter_by(owner_id=self.id).all(),
+            'funds': db.session.query(Fund.id).filter_by(owner_id=self.id).all()
         }
-        return json.dumps(jsonified)
+        return jsonified
 
 class Dashboard(db.Model):
     __tablename__ = 'dashboard'
