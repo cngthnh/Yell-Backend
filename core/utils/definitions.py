@@ -45,6 +45,10 @@ API_END_TIME = 'end_time'
 API_LABELS = 'labels'
 API_TASK_ID = 'task_id'
 API_DASHBOARD_ID = 'dashboard_id'
+API_DASHBOARDS = 'dashboards'
+API_FUNDS = 'funds'
+API_SUBTASKS = 'subtasks'
+API_TASKS = 'tasks'
 
 # Endpoints
 GET_USER_ENDPOINT = '/api/users/<user_id>' # GET

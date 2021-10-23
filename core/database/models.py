@@ -1,6 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
 import sys
-from ..utils.definitions import MAX_UID_LENGTH
+from ..utils.definitions import *
 from ..loader import db
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
@@ -27,15 +27,24 @@ class UserAccount(db.Model):
         self.hash = hash
         self.confirmed = False
     
-    def json(self):
-        jsonified = {
-            'id': self.id,
-            'email': self.email,
-            'name': self.name,
-            'dashboards': db.session.query(Dashboard.id).filter_by(owner_id=self.id).all(),
-            'funds': db.session.query(Fund.id).filter_by(owner_id=self.id).all()
+    def dict(self):
+        dashboardDetails = []
+        fundDetails = []
+
+        for dashboard in self.dashboards:
+            dashboardDetails.append(dashboard.dict())
+
+        for fund in self.funds:
+            fundDetails.append(fund.dict())
+
+        result = {
+            API_UID: self.id,
+            API_EMAIL: self.email,
+            API_NAME: self.name,
+            API_DASHBOARDS: dashboardDetails,
+            API_FUNDS: fundDetails
         }
-        return jsonified
+        return result
 
 class Dashboard(db.Model):
     __tablename__ = 'dashboard'
@@ -50,6 +59,18 @@ class Dashboard(db.Model):
     def __init__(self, name, owner_id):
         self.name = name
         self.owner_id = owner_id
+    
+    def dict(self):
+        taskDetails = []
+        for task in self.tasks:
+            taskDetails.append(task.dict())
+        
+        result = {
+            API_DASHBOARD_ID: str(self.id),
+            API_NAME: self.name,
+            API_TASKS: taskDetails,
+        }
+        return result
 
 class Task(db.Model):
     __tablename__ = 'task'
@@ -83,6 +104,25 @@ class Task(db.Model):
             self.end_time = end_time
         if labels is not None:
             self.labels = labels
+    
+    def dict(self):
+        subtaskDetails = []
+        for task in self.children:
+            subtaskDetails.append(task.dict())
+
+        result = {
+            API_TASK_ID: str(self.id),
+            API_SUBTASKS: subtaskDetails,
+            API_DASHBOARD_ID: str(self.dashboard_id),
+            API_STATUS: self.status,
+            API_NOTI_LEVEL: self.notification_level,
+            API_PRIORITY: self.priority,
+            API_START_TIME: self.start_time,
+            API_END_TIME: self.end_time,
+            API_LABELS: self.labels
+        }
+        return result
+
 
 class Fund(db.Model):
     __tablename__ = 'fund'

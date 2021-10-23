@@ -240,6 +240,6 @@ def getUserProfile(uid, user_id):
     user = db.session.query(UserAccount).filter_by(id=uid).first()
 
     if (user is not None):
-        return jsonify(user.json()), 200
+        return jsonify(user.dict()), 200
 
     return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404
