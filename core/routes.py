@@ -198,7 +198,11 @@ def updateTask(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    task = db.session.query(Task).filter(Task.dashboard_id.in_(db.session.query(Dashboard.id).filter(Dashboard.owner_id==uid)), Task.id==_taskId).first()
+    # task = db.session.query(Task).filter(Task.dashboard_id.in_ \
+    #     (db.session.query(usersDashboards.dashboard_id).filter(usersDashboards.user_id==uid)), Task.id==_taskId).first()
+    
+    task = db.session.query(Task).join(dashboardsTasks).join(Dashboard).join(usersDashboards).join(UserAccount). \
+        filter(UserAccount.id==uid, Task.id==_taskId).first()
 
     fields = data.keys()
     if API_NAME in fields:
@@ -233,12 +237,10 @@ def updateTask(uid):
     
     return jsonify(message=SUCCEED_MESSAGE), 200
 
-@app.route(GET_USER_ENDPOINT, methods=['GET'])
+@app.route(USERS_ENDPOINT, methods=['GET'])
 @tokenRequired
-def getUserProfile(uid, user_id):
-    if (uid!=user_id):
-        return jsonify(message=FORBIDDEN_MESSAGE), 403
-    
+def getUserProfile(uid):
+
     user = db.session.query(UserAccount).filter_by(id=uid).first()
 
     if (user is not None):
@@ -253,7 +255,7 @@ def getUserProfile(uid, user_id):
 
     return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404
 
-@app.route(GET_DASHBOARD_ENDPOINT, methods=['GET'])
+@app.route(DASHBOARDS_ENDPOINT, methods=['GET'])
 @tokenRequired
 def getDashboard(uid, dashboard_id):
     dashboard = db.session.query(Dashboard).filter(Dashboard.owner_id==uid, Dashboard.id==dashboard_id).first()
@@ -269,3 +271,8 @@ def getDashboard(uid, dashboard_id):
         return jsonify(dashboard.compactDict())
     else:
         return jsonify(dashboard.compactDict())
+
+@app.route(DASHBOARDS_ENDPOINT, methods=['PATCH'])
+@tokenRequired
+def updateDashboard(uid):
+    pass

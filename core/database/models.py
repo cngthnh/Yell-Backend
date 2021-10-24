@@ -6,9 +6,14 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
-usersDashboards = db.Table('users_dashboards',
+dashboardsTasks = db.Table('dashboards_tasks',
     db.Column('dashboard_id', UUID(as_uuid=True), db.ForeignKey('dashboard.id'), primary_key=True),
-    db.Column('task_id', UUID(as_uuid=True), db.ForeignKey('task.id'), primary_key=True),
+    db.Column('task_id', UUID(as_uuid=True), db.ForeignKey('task.id'), primary_key=True)
+)
+
+usersDashboards = db.Table('users_dashboards',
+    db.Column('user_id', db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), primary_key=True),
+    db.Column('dashboard_id', UUID(as_uuid=True), db.ForeignKey('dashboard.id'), primary_key=True)
 )
 
 class UserAccount(db.Model):
@@ -18,7 +23,10 @@ class UserAccount(db.Model):
     name = db.Column(db.UnicodeText)
     hash = db.Column(db.String(64))
     confirmed = db.Column(db.Boolean)
-    dashboards = db.relationship('Dashboard', backref='owner', lazy=True)
+    dashboards = db.relationship('Dashboard',
+            secondary=usersDashboards,
+            lazy='subquery',
+            backref=db.backref('owners', lazy=True))
     funds = db.relationship('Fund', backref='owner', lazy=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -66,10 +74,9 @@ class Dashboard(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     name = db.Column(db.UnicodeText)
     tasks = db.relationship('Task', 
-            secondary=usersDashboards, 
+            secondary=dashboardsTasks, 
             lazy='subquery',
             backref=db.backref('dashboards', lazy=True))
-    owner_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -107,7 +114,6 @@ class Task(db.Model):
     parent_id = db.Column(UUID(as_uuid=True), db.ForeignKey('task.id'), nullable=True)
     children = db.relationship('Task',
                 backref=db.backref('parent', remote_side=[id]))
-    dashboard_id = db.Column(UUID(as_uuid=True), db.ForeignKey('dashboard.id'), nullable=False)
     status = db.Column(db.Integer, default = 0)
     notification_level = db.Column(db.Integer, default = 0)
     priority = db.Column(db.Integer, default = 0)

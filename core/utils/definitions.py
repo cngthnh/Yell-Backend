@@ -64,14 +64,11 @@ API_CREATED_AT = 'created_at'
 API_UPDATED_AT = 'updated_at'
 
 # Endpoints
-GET_USER_ENDPOINT = '/api/users/<user_id>' # GET
-USERS_ENDPOINT = '/api/users' # POST, PATCH, DELETE
+USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE
 EMAIL_VRF_ENDPOINT = '/api/users/verify/<token>' # GET
 EMAIL_VRF_SIGNATURE = '/api/users/verify/'
 AUTH_ENDPOINT = '/api/users/auth' # POST
 AUTHORIZED_TEST_ENDPOINT = '/api/users/authorized' 
 USERS_CHECK_ENDPOINT = '/api/check' # GET
-TASKS_ENDPOINT = '/api/tasks' # POST, PATCH, DELETE
-GET_TASK_ENDPOINT = '/api/tasks/<task_id>' # GET
-DASHBOARDS_ENDPOINT = '/api/dashboards' # POST, PATCH, DELETE
-GET_DASHBOARD_ENDPOINT = '/api/dashboards/<dashboard_id>' # GET
+TASKS_ENDPOINT = '/api/tasks' # GET, POST, PATCH, DELETE
+DASHBOARDS_ENDPOINT = '/api/dashboards' # GET, POST, PATCH, DELETE
