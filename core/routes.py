@@ -270,3 +270,5 @@ def getDashboard(uid, dashboard_id):
         return jsonify(dashboard.dict()), 200
     elif (fetchType==API_COMPACT):
         return jsonify(dashboard.compactDict())
+    else:
+        return jsonify(dashboard.compactDict())
