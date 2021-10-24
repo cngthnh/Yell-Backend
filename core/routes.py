@@ -301,7 +301,9 @@ def updateDashboard(uid):
     try:
         db.session.add(dashboard)
         db.session.commit()
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 400
     
