@@ -162,7 +162,9 @@ def createTask(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    currentDashboard = db.session.query(Dashboard).filter_by(id=_dashboardId, owner_id=uid).first()
+    currentDashboard = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
+                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+                    
     if (currentDashboard is None):
         return jsonify(message=INVALID_DASHBOARD_MESSAGE), 403
 
