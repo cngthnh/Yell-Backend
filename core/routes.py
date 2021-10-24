@@ -220,6 +220,8 @@ def updateTask(uid):
     if API_DASHBOARD_ID in fields:
         task.dashboard_id = data[API_DASHBOARD_ID]
 
+    task.updated_at = datetime.utcnow()
+
     try:
         db.session.add(task)
         db.session.commit()
@@ -259,7 +261,7 @@ def getDashboard(uid, dashboard_id):
     if (user is None):
         return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404
 
-    dashboard = db.session.query(Dashboard).filter(Dashboard.in_(user.dashboards)).first()
+    dashboard = db.session.query(Dashboard).filter(Dashboard.in_(user.dashboards), Dashboard.id==dashboard_id).first()
 
     if dashboard is None:
         return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404
