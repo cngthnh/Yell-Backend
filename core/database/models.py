@@ -6,11 +6,6 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
-dashboardsTasks = db.Table('dashboards_tasks',
-    db.Column('dashboard_id', UUID(as_uuid=True), db.ForeignKey('dashboard.id'), primary_key=True),
-    db.Column('task_id', UUID(as_uuid=True), db.ForeignKey('task.id'), primary_key=True)
-)
-
 usersDashboards = db.Table('users_dashboards',
     db.Column('user_id', db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), primary_key=True),
     db.Column('dashboard_id', UUID(as_uuid=True), db.ForeignKey('dashboard.id'), primary_key=True)
@@ -73,10 +68,7 @@ class Dashboard(db.Model):
     __tablename__ = 'dashboard'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     name = db.Column(db.UnicodeText)
-    tasks = db.relationship('Task', 
-            secondary=dashboardsTasks, 
-            lazy='subquery',
-            backref=db.backref('dashboards', lazy=True))
+    tasks = db.relationship('Task', lazy=True, backref='dashboard')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -121,6 +113,7 @@ class Task(db.Model):
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     labels = db.Column(db.String, nullable=True)
+    dashboard_id = db.Column(UUID(as_uuid=True), db.ForeignKey('dashboard.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 

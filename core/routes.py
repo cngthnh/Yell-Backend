@@ -164,7 +164,7 @@ def createTask(uid):
 
     currentDashboard = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
                     filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
-                    
+
     if (currentDashboard is None):
         return jsonify(message=INVALID_DASHBOARD_MESSAGE), 403
 
@@ -199,12 +199,14 @@ def updateTask(uid):
         _taskId = data[API_TASK_ID]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
-
-    # task = db.session.query(Task).filter(Task.dashboard_id.in_ \
-    #     (db.session.query(usersDashboards.dashboard_id).filter(usersDashboards.user_id==uid)), Task.id==_taskId).first()
     
-    task = db.session.query(Task).join(dashboardsTasks).join(Dashboard).join(usersDashboards).join(UserAccount). \
-        filter(UserAccount.id==uid, Task.id==_taskId).first()
+    task = db.session.query(Task).filter(Task.id==_taskId).first()
+
+    permissionCheck = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
+        filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     fields = data.keys()
     if API_NAME in fields:
@@ -277,4 +279,30 @@ def getDashboard(uid, dashboard_id):
 @app.route(DASHBOARDS_ENDPOINT, methods=['PATCH'])
 @tokenRequired
 def updateDashboard(uid):
-    pass
+    try:
+        data = request.get_json()
+        _dashboardId = data[API_DASHBOARD_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    dashboard = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
+                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid)
+
+    if (dashboard is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 400
+    
+    fields = data.keys()
+    
+    if API_NAME in fields:
+        dashboard.name = data[API_NAME]
+    
+    dashboard.updated_at = datetime.utcnow()
+
+    try:
+        db.session.add(dashboard)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200

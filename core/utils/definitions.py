@@ -72,3 +72,4 @@ AUTHORIZED_TEST_ENDPOINT = '/api/users/authorized'
 USERS_CHECK_ENDPOINT = '/api/check' # GET
 TASKS_ENDPOINT = '/api/tasks' # GET, POST, PATCH, DELETE
 DASHBOARDS_ENDPOINT = '/api/dashboards' # GET, POST, PATCH, DELETE
+DASHBOARDS_PERMISSION_ENDPOINT = '/api/dashboards/permission' # POST, DELETE
