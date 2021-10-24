@@ -256,15 +256,10 @@ def getUserProfile(uid, user_id):
 @app.route(GET_DASHBOARD_ENDPOINT, methods=['GET'])
 @tokenRequired
 def getDashboard(uid, dashboard_id):
-    user = db.session.query(UserAccount).filter_by(id=uid)
-    
-    if (user is None):
-        return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404
-
-    dashboard = db.session.query(Dashboard).filter(Dashboard.in_(user.dashboards), Dashboard.id==dashboard_id).first()
+    dashboard = db.session.query(Dashboard).filter(Dashboard.owner_id==uid, Dashboard.id==dashboard_id).first()
 
     if dashboard is None:
-        return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404
+        return jsonify(DASHBOARD_DOES_NOT_EXISTS_MESSAGE), 404
 
     fetchType = request.args.get(API_FETCH)
     
