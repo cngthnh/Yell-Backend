@@ -240,6 +240,33 @@ def getUserProfile(uid, user_id):
     user = db.session.query(UserAccount).filter_by(id=uid).first()
 
     if (user is not None):
-        return jsonify(user.dict()), 200
+        fetchType = request.args.get(API_FETCH)
+
+        if (fetchType==API_FULL):
+            return jsonify(user.dict()), 200
+        elif (fetchType==API_COMPACT):
+            return jsonify(user.compactDict()), 200
+        else:
+            return jsonify(user.compactDict()), 200
 
     return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404
+
+@app.route(GET_DASHBOARD_ENDPOINT, methods=['GET'])
+@tokenRequired
+def getDashboard(uid, dashboard_id):
+    user = db.session.query(UserAccount).filter_by(id=uid)
+    
+    if (user is None):
+        return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404
+
+    dashboard = db.session.query(Dashboard).filter(Dashboard.in_(user.dashboards)).first()
+
+    if dashboard is None:
+        return jsonify(USER_DOES_NOT_EXISTS_MESSAGE), 404
+
+    fetchType = request.args.get(API_FETCH)
+    
+    if (fetchType==API_FULL):
+        return jsonify(dashboard.dict()), 200
+    elif (fetchType==API_COMPACT):
+        return jsonify(dashboard.compactDict())

@@ -4,6 +4,7 @@ from ..utils.definitions import *
 from ..loader import db
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
 
 usersDashboards = db.Table('users_dashboards',
     db.Column('dashboard_id', UUID(as_uuid=True), db.ForeignKey('dashboard.id'), primary_key=True),
@@ -19,6 +20,8 @@ class UserAccount(db.Model):
     confirmed = db.Column(db.Boolean)
     dashboards = db.relationship('Dashboard', backref='owner', lazy=True)
     funds = db.relationship('Fund', backref='owner', lazy=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, id, email, name, hash):
         self.id = id
@@ -42,7 +45,19 @@ class UserAccount(db.Model):
             API_EMAIL: self.email,
             API_NAME: self.name,
             API_DASHBOARDS: dashboardDetails,
-            API_FUNDS: fundDetails
+            API_FUNDS: fundDetails,
+            API_CREATED_AT: self.created_at,
+            API_UPDATED_AT: self.updated_at
+        }
+        return result
+    
+    def compactDict(self):
+        result = {
+            API_UID: self.id,
+            API_EMAIL: self.email,
+            API_NAME: self.name,
+            API_DASHBOARDS: [x.id for x in self.dashboards],
+            API_FUNDS: [x.id for x in self.funds]
         }
         return result
 
@@ -55,6 +70,8 @@ class Dashboard(db.Model):
             lazy='subquery',
             backref=db.backref('dashboards', lazy=True))
     owner_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, name, owner_id):
         self.name = name
@@ -68,7 +85,19 @@ class Dashboard(db.Model):
         result = {
             API_DASHBOARD_ID: str(self.id),
             API_NAME: self.name,
+            API_CREATED_AT: self.created_at,
+            API_UPDATED_AT: self.updated_at,
             API_TASKS: taskDetails,
+        }
+        return result
+    
+    def compactDict(self):
+        result = {
+            API_DASHBOARD_ID: str(self.id),
+            API_NAME: self.name,
+            API_CREATED_AT: self.created_at,
+            API_UPDATED_AT: self.updated_at,
+            API_TASKS: [x.id for x in self.tasks],
         }
         return result
 
@@ -86,6 +115,8 @@ class Task(db.Model):
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     labels = db.Column(db.String, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, name, dashboard_id, status = None, notification_level = None, priority = None, parent_id=None, start_time=None, end_time=None, labels=None):
         self.name = name
@@ -119,7 +150,9 @@ class Task(db.Model):
             API_PRIORITY: self.priority,
             API_START_TIME: self.start_time,
             API_END_TIME: self.end_time,
-            API_LABELS: self.labels
+            API_LABELS: self.labels,
+            API_CREATED_AT: self.created_at,
+            API_UPDATED_AT: self.updated_at
         }
         return result
 
@@ -134,6 +167,8 @@ class Fund(db.Model):
     balance = db.Column(db.BigInteger, nullable=False)
     threshold = db.Column(db.BigInteger, nullable=True)
     expenditures = db.relationship('Expenditure', backref='fund', lazy=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, owner_id, name, balance, start_time=None, end_time=None, threshold=None):
         self.owner_id = owner_id
@@ -159,7 +194,9 @@ class Fund(db.Model):
             API_END_TIME: self.end_time,
             API_BALANCE: self.balance,
             API_THRESHOLD: self.threshold,
-            API_EXPENDITURES: expenditureDetails
+            API_EXPENDITURES: expenditureDetails,
+            API_CREATED_AT: self.created_at,
+            API_UPDATED_AT: self.updated_at
         }
 
         return result
@@ -171,6 +208,8 @@ class Expenditure(db.Model):
     purposes = db.Column(db.UnicodeText, nullable=True)
     time = db.Column(db.DateTime, nullable=True)
     spending = db.Column(db.BigInteger, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, fund_id, spending, used_for=None, time=None):
         self.fund_id = fund_id
@@ -186,7 +225,9 @@ class Expenditure(db.Model):
             API_FUND_ID: str(self.fund_id),
             API_PURPOSES: self.purposes,
             API_TIME: self.time,
-            API_SPENDING: self.spending
+            API_SPENDING: self.spending,
+            API_CREATED_AT: self.created_at,
+            API_UPDATED_AT: self.updated_at
         }
         return result
 

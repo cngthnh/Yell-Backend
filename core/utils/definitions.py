@@ -23,6 +23,7 @@ EXPIRED_TOKEN_MESSAGE = 'EXPIRED_TOKEN'
 INVALID_DASHBOARD_MESSAGE = 'INVALID_DASHBOARD'
 FORBIDDEN_MESSAGE = 'FORBIDDEN'
 USER_DOES_NOT_EXISTS_MESSAGE = 'USER_DOES_NOT_EXISTS'
+DASHBOARD_DOES_NOT_EXISTS_MESSAGE = 'DASHBOARD_DOES_NOT_EXISTS'
 
 ## Key names ##
 ISSUER_KEY = 'iss'
@@ -56,6 +57,11 @@ API_EXPENDITURE_ID = 'exp_id'
 API_PURPOSES = 'purposes'
 API_TIME = 'time'
 API_SPENDING = 'spending'
+API_FETCH = 'fetch'
+API_FULL = 'full'
+API_COMPACT = 'compact'
+API_CREATED_AT = 'created_at'
+API_UPDATED_AT = 'updated_at'
 
 # Endpoints
 GET_USER_ENDPOINT = '/api/users/<user_id>' # GET
@@ -64,7 +70,7 @@ EMAIL_VRF_ENDPOINT = '/api/users/verify/<token>' # GET
 EMAIL_VRF_SIGNATURE = '/api/users/verify/'
 AUTH_ENDPOINT = '/api/users/auth' # POST
 AUTHORIZED_TEST_ENDPOINT = '/api/users/authorized' 
-USERS_CHECK_ENDPOINT = '/api/users/check' # GET
+USERS_CHECK_ENDPOINT = '/api/check' # GET
 TASKS_ENDPOINT = '/api/tasks' # POST, PATCH, DELETE
 GET_TASK_ENDPOINT = '/api/tasks/<task_id>' # GET
 DASHBOARDS_ENDPOINT = '/api/dashboards' # POST, PATCH, DELETE
