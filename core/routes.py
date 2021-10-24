@@ -286,7 +286,7 @@ def updateDashboard(uid):
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     dashboard = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid)
+                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
 
     if (dashboard is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 400
