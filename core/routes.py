@@ -162,7 +162,7 @@ def createTask(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    currentDashboard = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
+    currentDashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
                     filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
 
     if (currentDashboard is None):
@@ -202,7 +202,7 @@ def updateTask(uid):
     
     task = db.session.query(Task).filter(Task.id==_taskId).first()
 
-    permissionCheck = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
+    permissionCheck = db.session.query(Dashboard).join(UserAccount.dashboards). \
         filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
     
     if (permissionCheck is None):
@@ -271,7 +271,7 @@ def getDashboard(uid):
         filter(UserAccount.id==uid, Dashboard.id==dashboard_id).first()
 
     if dashboard is None:
-        return jsonify(DASHBOARD_DOES_NOT_EXISTS_MESSAGE), 404
+        return jsonify(message=DASHBOARD_DOES_NOT_EXISTS_MESSAGE), 404
 
     fetchType = request.args.get(API_FETCH)
     
@@ -291,7 +291,7 @@ def updateDashboard(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
+    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
                     filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
 
     if (dashboard is None):
@@ -325,7 +325,7 @@ def grantDashboardPermission(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
+    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
                     filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
 
     if (dashboard is None):
