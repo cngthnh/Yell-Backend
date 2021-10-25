@@ -138,7 +138,7 @@ def createDashboard(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = Dashboard(_name, uid)
+    dashboard = Dashboard(_name)
     
     currentUser = db.session.query(UserAccount).filter_by(id=uid).first()
     currentUser.dashboards.append(dashboard)

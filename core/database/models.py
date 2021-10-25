@@ -72,9 +72,8 @@ class Dashboard(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, name, owner_id):
+    def __init__(self, name):
         self.name = name
-        self.owner_id = owner_id
     
     def dict(self):
         taskDetails = []
