@@ -25,7 +25,7 @@ def sendVerificationEmail(recipient, token, recipient_name):
 
 def sendDashboardInvitation(token, recipient_email, recipient_name, dashboard_name):
     sender_mail = os.environ.get('MAIL_USERNAME')
-    msg = Message(subject = 'Yell Account Verification', sender = ('Yell', sender_mail), recipients = [recipient_email])
+    msg = Message(subject = 'Yell Dashboard Invitation', sender = ('Yell', sender_mail), recipients = [recipient_email])
     link = os.environ.get('YELL_MAIN_URL', '') + DASHBOARD_INVITATION_SIGNATURE + token
     msg.body = render_template(DASHBOARD_INV_TEMPLATE_TXT, link = link, recipient_name = recipient_name, dashboard_name = dashboard_name)
     sendEmailAsync(msg)

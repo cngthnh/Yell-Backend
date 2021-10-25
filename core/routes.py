@@ -343,12 +343,7 @@ def grantDashboardPermission(uid):
     return jsonify(message=INVITATION_SENT_MESSAGE), 200
 
 @app.route(DASHBOARD_INVITATION_ENDPOINT, methods=['GET'])
-def confirmDashboardInvitation():
-    try:
-        token = request.args[API_TOKEN]
-    except Exception:
-        return jsonify(INVALID_TOKEN_MESSAGE), 403
-
+def confirmDashboardInvitation(token):
     if not verifyToken(token):
         return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
