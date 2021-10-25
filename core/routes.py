@@ -267,7 +267,8 @@ def getDashboard(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).filter(Dashboard.owner_id==uid, Dashboard.id==dashboard_id).first()
+    dashboard = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
+        filter(UserAccount.id==uid, Dashboard.id==dashboard_id).first()
 
     if dashboard is None:
         return jsonify(DASHBOARD_DOES_NOT_EXISTS_MESSAGE), 404
