@@ -336,7 +336,10 @@ def grantDashboardPermission(uid):
     if (targetUser is None):
         return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
 
-    sendDashboardInvitation(encode({API_UID: _targetUserId, API_DASHBOARD_ID: dashboard.id, API_INVITED_BY: uid}), targetUser.email, targetUser.name, dashboard.name)
+    sendDashboardInvitation(encode({API_UID: _targetUserId, 
+                                    API_DASHBOARD_ID: str(dashboard.id), 
+                                    API_INVITED_BY: uid}), 
+                            targetUser.email, targetUser.name, dashboard.name)
     return jsonify(message=INVITATION_SENT_MESSAGE), 200
 
 @app.route(DASHBOARD_INVITATION_ENDPOINT, methods=['GET'])
