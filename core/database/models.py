@@ -21,7 +21,7 @@ class UserAccount(db.Model):
     dashboards = db.relationship('Dashboard',
             secondary=usersDashboards,
             lazy='subquery',
-            backref=db.backref('owners', lazy=True))
+            backref=db.backref('owners_backref', lazy=True))
     funds = db.relationship('Fund', backref='owner', lazy=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -74,7 +74,7 @@ class Dashboard(db.Model):
     owners = db.relationship('UserAccount',
             secondary=usersDashboards,
             lazy='subquery',
-            backref=db.backref('dashboards', lazy=True))
+            backref=db.backref('dashboards_backref', lazy=True))
 
     def __init__(self, name):
         self.name = name
