@@ -71,6 +71,10 @@ class Dashboard(db.Model):
     tasks = db.relationship('Task', lazy=True, backref='dashboard')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    owners = db.relationship('UserAccount',
+            secondary=usersDashboards,
+            lazy='subquery',
+            backref=db.backref('dashboards', lazy=True))
 
     def __init__(self, name):
         self.name = name
