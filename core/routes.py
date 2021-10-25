@@ -5,7 +5,7 @@ from .loader import *
 from .database.models import *
 from .database.utils import *
 from functools import wraps
-from .utils.email import sendVerificationEmail
+from .utils.email import sendDashboardInvitation, sendVerificationEmail
 import sys
 
 def tokenRequired(func):
@@ -102,7 +102,7 @@ def createAccount():
         sys.stdout.flush()
         return jsonify(message=FAILED_MESSAGE), 400
 
-    sendVerificationEmail(_email, encode({'uid': _uid, 'email': _email}, EMAIL_VERIFICATION_TIME), _name)
+    sendVerificationEmail(_email, encode({API_UID: _uid, API_EMAIL: _email}, EMAIL_VERIFICATION_TIME), _name)
 
     token = generateToken({API_UID: _uid, API_HASH: _hash}).decode('UTF-8')
 
@@ -302,6 +302,63 @@ def updateDashboard(uid):
         db.session.add(dashboard)
         db.session.commit()
     except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(DASHBOARDS_PERMISSION_ENDPOINT, methods=['POST'])
+@tokenRequired
+def grantDashboardPermission(uid):
+    try:
+        data = request.get_json()
+        _dashboardId = data[API_DASHBOARD_ID]
+        _targetUserId = data[API_UID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    dashboard = db.session.query(Dashboard).join(usersDashboards).join(UserAccount). \
+                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+
+    if (dashboard is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 400
+
+    targetUser = db.session.query(UserAccount).filter_by(id=_targetUserId).first()
+
+    if (targetUser is None):
+        return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
+
+    sendDashboardInvitation(encode({API_UID: _targetUserId, API_DASHBOARD_ID: dashboard.id, API_INVITED_BY: uid}), targetUser.email, targetUser.name, dashboard.name)
+    return jsonify(message=INVITATION_SENT_MESSAGE), 200
+
+@app.route(DASHBOARD_INVITATION_ENDPOINT, methods=['GET'])
+def confirmDashboardInvitation():
+    try:
+        token = request.args[API_TOKEN]
+    except Exception:
+        return jsonify(INVALID_TOKEN_MESSAGE), 403
+
+    if not verifyToken(token):
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+
+    try:
+        tokenDict = decode(token)
+    except jwt.ExpiredSignatureError:
+        return jsonify(message=EXPIRED_TOKEN_MESSAGE)
+
+    try:
+        dashboard = db.session.query(Dashboard).filter_by(id=tokenDict[API_DASHBOARD_ID]).first()
+        user = db.session.query(UserAccount).filter_by(id=tokenDict[API_UID]).first()
+        user.dashboards.append(dashboard)
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except SQLAlchemyError:
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()

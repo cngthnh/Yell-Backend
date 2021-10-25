@@ -2,6 +2,7 @@
 YELL_ISSUER = 'Yell App by Yellion'
 EMAIL_VRF_TEMPLATE_HTML = 'email_verification_template.html'
 EMAIL_VRF_TEMPLATE_TXT = 'email_verification_template.txt'
+DASHBOARD_INV_TEMPLATE_TXT = 'dashboard_invitation_template.txt'
 MAX_UID_LENGTH = 64
 
 ## Messages ##
@@ -24,6 +25,7 @@ INVALID_DASHBOARD_MESSAGE = 'INVALID_DASHBOARD'
 FORBIDDEN_MESSAGE = 'FORBIDDEN'
 USER_DOES_NOT_EXISTS_MESSAGE = 'USER_DOES_NOT_EXISTS'
 DASHBOARD_DOES_NOT_EXISTS_MESSAGE = 'DASHBOARD_DOES_NOT_EXISTS'
+INVITATION_SENT_MESSAGE = 'INVITATION_SENT'
 
 ## Key names ##
 ISSUER_KEY = 'iss'
@@ -32,6 +34,7 @@ EXPIRATION_KEY = 'exp'
 NOT_BEFORE_KEY = 'nbf'
 
 ## Definitions for API key names ##
+API_TOKEN = 'token'
 API_UID = 'uid'
 API_HASH = 'hash'
 API_EMAIL = 'email'
@@ -62,6 +65,7 @@ API_FULL = 'full'
 API_COMPACT = 'compact'
 API_CREATED_AT = 'created_at'
 API_UPDATED_AT = 'updated_at'
+API_INVITED_BY = 'invited_by'
 
 # Endpoints
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE
@@ -73,3 +77,5 @@ USERS_CHECK_ENDPOINT = '/api/check' # GET
 TASKS_ENDPOINT = '/api/tasks' # GET, POST, PATCH, DELETE
 DASHBOARDS_ENDPOINT = '/api/dashboards' # GET, POST, PATCH, DELETE
 DASHBOARDS_PERMISSION_ENDPOINT = '/api/dashboards/permission' # POST, DELETE
+DASHBOARD_INVITATION_ENDPOINT = '/api/dashboards/invitation/<token>' # GET
+DASHBOARD_INVITATION_SIGNATURE = '/api/dashboards/invitation/'
