@@ -261,7 +261,12 @@ def getUserProfile(uid):
 
 @app.route(DASHBOARDS_ENDPOINT, methods=['GET'])
 @tokenRequired
-def getDashboard(uid, dashboard_id):
+def getDashboard(uid):
+    try:
+        dashboard_id = request.args[API_DASHBOARD_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
     dashboard = db.session.query(Dashboard).filter(Dashboard.owner_id==uid, Dashboard.id==dashboard_id).first()
 
     if dashboard is None:
