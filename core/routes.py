@@ -342,6 +342,40 @@ def grantDashboardPermission(uid):
                             targetUser.email, targetUser.name, dashboard.name)
     return jsonify(message=INVITATION_SENT_MESSAGE), 200
 
+@app.route(DASHBOARDS_PERMISSION_ENDPOINT, methods=['DELETE'])
+@tokenRequired
+def removeDashboardPermission(uid):
+    try:
+        data = request.get_json()
+        _dashboardId = data[API_DASHBOARD_ID]
+        _targetUserId = data[API_UID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
+                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+
+    if (dashboard is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 400
+
+    targetUser = db.session.query(UserAccount).filter_by(id=_targetUserId).first()
+
+    if (targetUser is None):
+        return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
+    
+    targetUser.dashboards.remove(dashboard)
+
+    try:
+        db.session.add(targetUser)
+        db.session.commit()
+    except SQLAlchemyError:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
 @app.route(DASHBOARD_INVITATION_ENDPOINT, methods=['GET'])
 def confirmDashboardInvitation(token):
     if not verifyToken(token):
