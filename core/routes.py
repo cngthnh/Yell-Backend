@@ -403,3 +403,29 @@ def confirmDashboardInvitation(token):
         return jsonify(message=FAILED_MESSAGE), 400
     
     return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(DASHBOARDS_ENDPOINT, methods=['DELETE'])
+@tokenRequired
+def deleteDashboard(uid):
+    try:
+        data = request.get_json()
+        _dashboardId = data[API_DASHBOARD_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
+                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+
+    if (dashboard is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 400
+
+    try:
+        db.session.delete(dashboard)
+        db.session.commit()
+    except SQLAlchemyError:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
