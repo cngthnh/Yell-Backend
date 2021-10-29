@@ -354,6 +354,8 @@ def grantDashboardPermission(uid):
         _dashboardId = data[API_DASHBOARD_ID]
         _targetUserId = data[API_UID]
         _role = data[API_ROLE]
+        if _role not in DASHBOARD_ROLES:
+            raise Exception()
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
@@ -418,17 +420,21 @@ def removeDashboardPermission(uid):
     if (INVITE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
     
-    dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=_targetUserId, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
 
-    if (dashboard is None):
-        return jsonify(message=FORBIDDEN_MESSAGE), 400
+    if (INVITE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     targetUser = db.session.query(UserAccount).filter_by(id=_targetUserId).first()
 
     if (targetUser is None):
         return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
     
-    targetUser.dashboards.remove(dashboard)
+    targetUser.dashboards.remove(permissionCheck)
 
     try:
         db.session.add(targetUser)
@@ -684,3 +690,7 @@ def createTransaction(uid):
         fundId = data[API_FUND_ID]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    transaction = Transaction(fundId, spending, data.get(API_PURPOSES), data.get(API_TIME))
+
+    
