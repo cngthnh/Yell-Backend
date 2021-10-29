@@ -6,10 +6,17 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
-usersDashboards = db.Table('users_dashboards',
-    db.Column('user_id', db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), primary_key=True),
-    db.Column('dashboard_id', UUID(as_uuid=True), db.ForeignKey('dashboard.id'), primary_key=True)
-)
+class DashboardPermission(db.Model):
+    __tablename__ = 'dashboard_permission'
+    user_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('left.id'), primary_key=True)
+    dashboard_id = db.Column(UUID(as_uuid=True), db.ForeignKey('dashboard.id'), primary_key=True)
+    role = db.Column(db.String)
+    dashboard = db.relationship('Dashboard', back_populates='users')
+    user = db.relationship('UserAccount', back_populates='dashboards')
+
+    def __init__(self, dashboard, role):
+        self.dashboard = dashboard
+        self.role = role
 
 class UserAccount(db.Model):
     __tablename__ = 'user_account'
@@ -18,10 +25,7 @@ class UserAccount(db.Model):
     name = db.Column(db.UnicodeText)
     hash = db.Column(db.String(64))
     confirmed = db.Column(db.Boolean)
-    dashboards = db.relationship('Dashboard',
-            secondary=usersDashboards,
-            lazy='subquery',
-            backref=db.backref('owners', lazy=True))
+    dashboards = db.relationship('DashboardPermission', back_populates='user')
     funds = db.relationship('Fund', backref='owner', lazy=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -71,6 +75,7 @@ class Dashboard(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     name = db.Column(db.UnicodeText)
     tasks = db.relationship('Task', lazy=True, backref='dashboard')
+    users = db.relationship('UserAccount', back_populates='dashboard')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -225,11 +230,11 @@ class Transaction(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, fund_id, spending, used_for=None, time=None):
+    def __init__(self, fund_id, spending, purposes=None, time=None):
         self.fund_id = fund_id
         self.spending = spending
-        if used_for is not None:
-            self.used_for = used_for
+        if purposes is not None:
+            self.purposes = purposes
         if time is not None:
             self.time = time
     

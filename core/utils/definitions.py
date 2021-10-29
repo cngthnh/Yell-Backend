@@ -4,6 +4,20 @@ EMAIL_VRF_TEMPLATE_HTML = 'email_verification_template.html'
 EMAIL_VRF_TEMPLATE_TXT = 'email_verification_template.txt'
 DASHBOARD_INV_TEMPLATE_TXT = 'dashboard_invitation_template.txt'
 MAX_UID_LENGTH = 64
+VIEWER_ROLE = 'viewer'
+EDITOR_ROLE = 'editor'
+ADMIN_ROLE = 'admin'
+VIEW_PERMISSION = 'view'
+EDIT_PERMISSION = 'edit'
+INVITE_PERMISSION = 'invite'
+DELETE_PERMISSION = 'delete'
+
+DASHBOARD_PERMISSION = {
+    VIEWER_ROLE: [VIEW_PERMISSION],
+    EDITOR_ROLE: [VIEW_PERMISSION, EDIT_PERMISSION],
+    ADMIN_ROLE: [VIEW_PERMISSION, EDIT_PERMISSION, INVITE_PERMISSION, DELETE_PERMISSION]
+}
+
 
 ## Messages ##
 INVALID_TOKEN_MESSAGE = 'INVALID_TOKEN' # None / can't be decrypt / fault signature tokens
@@ -68,6 +82,7 @@ API_COMPACT = 'compact'
 API_CREATED_AT = 'created_at'
 API_UPDATED_AT = 'updated_at'
 API_INVITED_BY = 'invited_by'
+API_ROLE = 'role'
 
 # Endpoints
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE

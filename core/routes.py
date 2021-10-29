@@ -139,9 +139,10 @@ def createDashboard(uid):
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     dashboard = Dashboard(_name)
-    
+    permission = DashboardPermission(dashboard, ADMIN_ROLE)
+
     currentUser = db.session.query(UserAccount).filter_by(id=uid).first()
-    currentUser.dashboards.append(dashboard)
+    currentUser.dashboards.append(permission)
 
     try:
         db.session.add(currentUser)
@@ -162,8 +163,16 @@ def createTask(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    currentDashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    currentDashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (currentDashboard is None):
         return jsonify(message=INVALID_DASHBOARD_MESSAGE), 403
@@ -205,10 +214,13 @@ def updateTask(uid):
     if (task is None):
         return jsonify(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Dashboard).join(UserAccount.dashboards). \
-        filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=task.dashboard_id).first()
     
     if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     fields = data.keys()
@@ -270,8 +282,16 @@ def getDashboard(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-        filter(UserAccount.id==uid, Dashboard.id==dashboard_id).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=dashboard_id).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (VIEW_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    dashboard = db.session.query(Dashboard).filter_by(id=dashboard_id).first()
 
     if dashboard is None:
         return jsonify(message=DASHBOARD_DOES_NOT_EXISTS_MESSAGE), 404
@@ -294,8 +314,16 @@ def updateDashboard(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 400
@@ -328,8 +356,16 @@ def grantDashboardPermission(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (INVITE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+    
+    dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 400
@@ -355,8 +391,16 @@ def removeDashboardPermission(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (INVITE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+    
+    dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 400
@@ -416,8 +460,16 @@ def deleteDashboard(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (DELETE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+    
+    dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 400
@@ -446,10 +498,13 @@ def getTask(uid):
     if (task is None):
         return jsonify(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Dashboard).join(UserAccount.dashboards). \
-        filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=task.dashboard_id).first()
     
     if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (VIEW_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     return jsonify(task.dict()), 200
@@ -468,10 +523,13 @@ def deleteTask(uid):
     if (task is None):
         return jsonify(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Dashboard).join(UserAccount.dashboards). \
-        filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=task.dashboard_id).first()
     
     if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     try:
@@ -594,3 +652,13 @@ def deleteFund(uid):
         return jsonify(message=FAILED_MESSAGE), 400
     
     return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(TRANSACTIONS_ENDPOINT, methods=['POST'])
+@tokenRequired
+def createTransaction(uid):
+    try:
+        data = request.get_json()
+        spending = data[API_SPENDING]
+        fundId = data[API_FUND_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
