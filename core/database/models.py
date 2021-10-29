@@ -27,7 +27,7 @@ class UserAccount(db.Model):
     name = db.Column(db.UnicodeText)
     hash = db.Column(db.String(64))
     confirmed = db.Column(db.Boolean)
-    dashboards = db.relationship('DashboardPermission', back_populates='user')
+    dashboards = db.relationship('DashboardPermission', back_populates='user', cascade='all, delete-orphan')
     funds = db.relationship('Fund', backref='owner', lazy=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -77,7 +77,7 @@ class Dashboard(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     name = db.Column(db.UnicodeText)
     tasks = db.relationship('Task', lazy=True, backref='dashboard')
-    users = db.relationship('DashboardPermission', back_populates='dashboard')
+    users = db.relationship('DashboardPermission', back_populates='dashboard', cascade='all, delete-orphan')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
