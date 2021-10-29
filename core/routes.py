@@ -683,11 +683,53 @@ def deleteFund(uid):
 def createTransaction(uid):
     try:
         data = request.get_json()
-        spending = data[API_SPENDING]
+        amount = data[API_AMOUNT]
         fundId = data[API_FUND_ID]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    transaction = Transaction(fundId, spending, data.get(API_PURPOSES), data.get(API_TIME))
+    currentFund = db.session.query(Fund).filter_by(id=fundId, owner_id=uid).first()
+    if (currentFund is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
 
+    transaction = Transaction(fundId, amount, data.get(API_PURPOSES), data.get(API_TIME))
+    try:
+        currentFund.transactions.append(transaction)
+        db.session.add(currentFund)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
     
+    return jsonify(message=SUCCEED_MESSAGE, transaction_id=transaction.id), 200
+
+@app.route(TRANSACTIONS_ENDPOINT, methods=['GET'])
+@tokenRequired
+def getTransaction(uid):
+    try:
+        transactionId = request.args[API_TRANSACTION_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    transaction = db.session.query(Transaction).join(Fund.transactions, UserAccount.funds).\
+        filter(Transaction.id==transactionId, UserAccount.id==uid).first()
+    if (transaction is None):
+        return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
+
+    return jsonify(transaction.dict()), 200
+
+@app.route(TRANSACTIONS_ENDPOINT, methods=['PATCH'])
+@tokenRequired
+def updateTransaction(uid):
+    try:
+        data = request.get_json()
+        transactionId = data[API_TRANSACTION_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    transaction = db.session.query(Transaction).join(Fund.transactions, UserAccount.funds).\
+        filter(Transaction.id==transactionId, UserAccount.id==uid).first()
+    if (transaction is None):
+        return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404

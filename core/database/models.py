@@ -233,13 +233,13 @@ class Transaction(db.Model):
     fund_id = db.Column(UUID(as_uuid=True), db.ForeignKey('fund.id'), nullable=False)
     purposes = db.Column(db.UnicodeText, nullable=True)
     time = db.Column(db.DateTime, nullable=True)
-    spending = db.Column(db.BigInteger, nullable=False)
+    amount = db.Column(db.BigInteger, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, fund_id, spending, purposes=None, time=None):
+    def __init__(self, fund_id, amount, purposes=None, time=None):
         self.fund_id = fund_id
-        self.spending = spending
+        self.amount = amount
         if purposes is not None:
             self.purposes = purposes
         if time is not None:
@@ -251,7 +251,7 @@ class Transaction(db.Model):
             API_FUND_ID: str(self.fund_id),
             API_PURPOSES: self.purposes,
             API_TIME: self.time,
-            API_SPENDING: self.spending,
+            API_AMOUNT: self.amount,
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
         }
