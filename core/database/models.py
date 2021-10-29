@@ -8,7 +8,7 @@ from datetime import datetime
 
 class DashboardPermission(db.Model):
     __tablename__ = 'dashboard_permission'
-    user_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('left.id'), primary_key=True)
+    user_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), primary_key=True)
     dashboard_id = db.Column(UUID(as_uuid=True), db.ForeignKey('dashboard.id'), primary_key=True)
     role = db.Column(db.String)
     dashboard = db.relationship('Dashboard', back_populates='users')
