@@ -366,6 +366,22 @@ def grantDashboardPermission(uid):
     if (INVITE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
     
+    alreadyConfirmed = db.session.query(DashboardPermission).filter_by(dashboard_id=_dashboardId, user_id=_targetUserId).first()
+
+    # Already have permission in this dashboard
+    if (alreadyConfirmed is not None):
+        alreadyConfirmed.role = _role
+        alreadyConfirmed.updated_at = datetime.utcnow()
+        try:
+            db.session.add(alreadyConfirmed)
+            db.session.commit()
+        except SQLAlchemyError as e:
+            print(str(e))
+            sys.stdout.flush()
+            db.session.rollback()
+            return jsonify(message=FAILED_MESSAGE), 400
+        return jsonify(message=SUCCEED_MESSAGE), 200
+
     dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):

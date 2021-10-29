@@ -13,6 +13,8 @@ class DashboardPermission(db.Model):
     role = db.Column(db.String)
     dashboard = db.relationship('Dashboard', back_populates='users')
     user = db.relationship('UserAccount', back_populates='dashboards')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, dashboard, role):
         self.dashboard = dashboard
@@ -63,7 +65,7 @@ class UserAccount(db.Model):
             API_UID: self.id,
             API_EMAIL: self.email,
             API_NAME: self.name,
-            API_DASHBOARDS: [x.id for x in self.dashboards],
+            API_DASHBOARDS: [x.dashboard_id for x in self.dashboards],
             API_FUNDS: [x.id for x in self.funds],
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
