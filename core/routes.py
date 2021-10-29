@@ -426,9 +426,6 @@ def removeDashboardPermission(uid):
     if (permissionCheck is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
-    if (INVITE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return jsonify(message=FORBIDDEN_MESSAGE), 403
-
     targetUser = db.session.query(UserAccount).filter_by(id=_targetUserId).first()
 
     if (targetUser is None):
