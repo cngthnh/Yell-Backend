@@ -353,6 +353,7 @@ def grantDashboardPermission(uid):
         data = request.get_json()
         _dashboardId = data[API_DASHBOARD_ID]
         _targetUserId = data[API_UID]
+        _role = data[API_ROLE]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
@@ -376,8 +377,9 @@ def grantDashboardPermission(uid):
         return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
 
     sendDashboardInvitation(encode({API_UID: _targetUserId, 
-                                    API_DASHBOARD_ID: str(dashboard.id), 
-                                    API_INVITED_BY: uid}), 
+                                    API_DASHBOARD_ID: _dashboardId, 
+                                    API_INVITED_BY: uid,
+                                    API_ROLE: _role}), 
                             targetUser.email, targetUser.name, dashboard.name)
     return jsonify(message=INVITATION_SENT_MESSAGE), 200
 
@@ -436,7 +438,8 @@ def confirmDashboardInvitation(token):
     try:
         dashboard = db.session.query(Dashboard).filter_by(id=tokenDict[API_DASHBOARD_ID]).first()
         user = db.session.query(UserAccount).filter_by(id=tokenDict[API_UID]).first()
-        user.dashboards.append(dashboard)
+        permission = DashboardPermission(dashboard, tokenDict[API_ROLE])
+        user.dashboards.append(permission)
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
