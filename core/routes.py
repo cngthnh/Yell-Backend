@@ -437,8 +437,7 @@ def deleteDashboard(uid):
 @tokenRequired
 def getTask(uid):
     try:
-        data = request.get_json()
-        _taskId = data[API_TASK_ID]
+        _taskId = request.args[API_TASK_ID]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -512,14 +511,13 @@ def createFund(uid):
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 400
     
-    return jsonify(message=SUCCEED_MESSAGE), 200
+    return jsonify(message=SUCCEED_MESSAGE, fund_id=fund.id), 200
 
 @app.route(FUNDS_ENDPOINT, methods=['GET'])
 @tokenRequired
 def getFund(uid):
     try:
-        data = request.get_json()
-        _fundId = data[API_FUND_ID]
+        _fundId = request.args[API_FUND_ID]
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -528,7 +526,13 @@ def getFund(uid):
     if fund is None:
         return jsonify(message=FUND_DOES_NOT_EXISTS_MESSAGE), 404
 
-    return jsonify(fund.dict()), 200
+    fetchType = request.args.get(API_FETCH)
+    if (fetchType==API_FULL):
+        return jsonify(fund.dict()), 200
+    elif (fetchType==API_COMPACT):
+        return jsonify(fund.compactDict()), 200
+    else:
+        return jsonify(fund.compactDict()), 200
 
 @app.route(FUNDS_ENDPOINT, methods=['PATCH'])
 @tokenRequired
