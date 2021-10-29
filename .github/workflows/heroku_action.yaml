@@ -1,0 +1,56 @@
+name: yell-backend
+on:
+  push:
+    branches:
+      - main
+jobs:
+  setup-build-publish-deploy:
+    name: Checkout, Login and Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+
+    # Write env
+    - name: Prepare Environment
+      env:
+        YELL_SIG_KEY: ${{ secrets.YELL_HS256_KEY }}
+        YELL_ENC_KEY: ${{ secrets.YELL_A256GCM_KEY }}
+        YELL_MAIL_USERNAME: ${{ secrets.YELL_MAIL_USERNAME }}
+        YELL_MAIL_PASSWORD: ${{ secrets.YELL_MAIL_PASSWORD }}
+        YELL_MAIN_URL: ${{ secrets.YELL_MAIN_URL }}
+      run: |
+        echo "$YELL_SIG_KEY" > sig
+        echo "$YELL_ENC_KEY" > enc
+        echo "$YELL_MAIL_USERNAME" > mail_username
+        echo "$YELL_MAIL_PASSWORD" > mail_password
+        echo "$YELL_MAIN_URL" > main_url
+
+    # Login
+    - name: Heroku Login
+      run: |
+        cat > ~/.netrc <<EOF
+          machine api.heroku.com
+            login $HEROKU_EMAIL
+            password $HEROKU_API_KEY
+          machine git.heroku.com
+            login $HEROKU_EMAIL
+            password $HEROKU_API_KEY
+        EOF
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+
+    # Docker build
+    - name: Docker Build
+      run: docker login --username=_ --password=$HEROKU_API_KEY registry.heroku.com
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+    # Deploy to Heroku
+    - name: Publish
+      run: |
+        heroku container:push web -a $HEROKU_APP_NAME
+        heroku container:release web -a $HEROKU_APP_NAME
+      env:
+        HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}

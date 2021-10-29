@@ -1,23 +1,10 @@
 import os
 from flask import Flask
-from utils.definitions import *
-from database.utils import getDbUri, db
-from database.models import *
-from utils.email import mail
+from .utils.definitions import *
+from .utils.email import mail
 import secrets
-
-def loadDbConfigs():
-    try:
-        os.environ['DB_USER'] = (open('db_user', 'r').readline()).strip()
-        os.remove('db_user')
-        os.environ['DB_PASS'] = (open('db_pass', 'r').readline()).strip()
-        os.remove('db_pass')
-        os.environ['DB_NAME'] = (open('db_name', 'r').readline()).strip()
-        os.remove('db_name')
-        os.environ['DB_HOST'] = (open('db_host', 'r').readline()).strip()
-        os.remove('db_host')
-    except Exception:
-        pass
+from flask_sqlalchemy import SQLAlchemy
+from flask_talisman import Talisman
 
 def loadKeys():
     try:
@@ -45,19 +32,19 @@ def loadUrl():
         pass
 
 def loadConfigs():
-    loadDbConfigs()
     loadEmailConfigs()
     loadKeys()
     loadUrl()
 
 # init Flask
 app = Flask(__name__)
+Talisman(app)
 
 # load env
 loadConfigs()
 
 # init SQL database and email connection
-app.config['SQLALCHEMY_DATABASE_URI'] = getDbUri()
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres', 'postgresql+psycopg2')
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
@@ -66,7 +53,10 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
+# app.config['DEBUG'] = True
+
+# init DB
+db = SQLAlchemy(app)
 
 with app.app_context():
-    db.init_app(app)
     mail.init_app(app)

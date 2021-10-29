@@ -1,0 +1,7 @@
+Hi {{ recipient_name }},
+
+You've received an invitation to collaborate in dashboard {{ dashboard_name }}
+Please click on the link below to confirm your participation in this dashboard:
+{{ link }}
+
+The Yellion Team.

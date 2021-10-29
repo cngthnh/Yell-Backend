@@ -5,7 +5,7 @@ from jose import jwe
 from jose import jwk
 from jose.utils import base64url_decode
 from jose.constants import ALGORITHMS
-from utils.definitions import *
+from .definitions import *
 from datetime import datetime, timedelta
 
 def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):

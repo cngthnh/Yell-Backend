@@ -9,8 +9,8 @@ RUN pip install -r requirements.txt
 COPY . /app
 
 # Expose port 80
-EXPOSE 80
-ENV PORT 80
+EXPOSE 443
+ENV PORT 443
 
 # Set the WORKDIR to be the app folder
 WORKDIR /app
