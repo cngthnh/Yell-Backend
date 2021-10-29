@@ -28,7 +28,7 @@ class UserAccount(db.Model):
     hash = db.Column(db.String(64))
     confirmed = db.Column(db.Boolean)
     dashboards = db.relationship('DashboardPermission', back_populates='user', cascade='all, delete-orphan')
-    funds = db.relationship('Fund', backref='owner', lazy=True)
+    funds = db.relationship('Fund', backref='owner', lazy=True, cascade='all, delete-orphan')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -118,6 +118,7 @@ class Task(db.Model):
     notification_level = db.Column(db.Integer, default = 0)
     priority = db.Column(db.Integer, default = 0)
     name = db.Column(db.UnicodeText)
+    content = db.Column(db.UnicodeText)
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     labels = db.Column(db.String, nullable=True)
@@ -149,6 +150,7 @@ class Task(db.Model):
             subtaskDetails.append(task.dict())
 
         result = {
+            API_NAME: self.name,
             API_TASK_ID: str(self.id),
             API_SUBTASKS: subtaskDetails,
             API_DASHBOARD_ID: str(self.dashboard_id),
@@ -173,7 +175,7 @@ class Fund(db.Model):
     end_time = db.Column(db.DateTime, nullable=True)
     balance = db.Column(db.BigInteger, nullable=False)
     threshold = db.Column(db.BigInteger, nullable=True)
-    transactions = db.relationship('Transaction', backref='fund', lazy=True)
+    transactions = db.relationship('Transaction', backref='fund', lazy=True, cascade='all, delete-orphan')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
