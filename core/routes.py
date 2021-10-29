@@ -202,6 +202,9 @@ def updateTask(uid):
     
     task = db.session.query(Task).filter(Task.id==_taskId).first()
 
+    if (task is None):
+        return jsonify(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
+
     permissionCheck = db.session.query(Dashboard).join(UserAccount.dashboards). \
         filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
     
@@ -422,7 +425,165 @@ def deleteDashboard(uid):
     try:
         db.session.delete(dashboard)
         db.session.commit()
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(TASKS_ENDPOINT, methods=['GET'])
+@tokenRequired
+def getTask(uid):
+    try:
+        data = request.get_json()
+        _taskId = data[API_TASK_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    task = db.session.query(Task).filter(Task.id==_taskId).first()
+
+    if (task is None):
+        return jsonify(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
+
+    permissionCheck = db.session.query(Dashboard).join(UserAccount.dashboards). \
+        filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    return jsonify(task.dict()), 200
+
+@app.route(TASKS_ENDPOINT, methods=['DELETE'])
+@tokenRequired
+def deleteTask(uid):
+    try:
+        data = request.get_json()
+        _taskId = data[API_TASK_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    task = db.session.query(Task).filter(Task.id==_taskId).first()
+    
+    if (task is None):
+        return jsonify(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
+
+    permissionCheck = db.session.query(Dashboard).join(UserAccount.dashboards). \
+        filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    try:
+        db.session.delete(task)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(FUNDS_ENDPOINT, methods=['POST'])
+@tokenRequired
+def createFund(uid):
+    try:
+        data = request.get_json()
+        name = data[API_NAME]
+        balance = data[API_BALANCE]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    fund = Fund(uid, 
+                name, 
+                balance, 
+                data.get(API_START_TIME), 
+                data.get(API_END_TIME), 
+                data.get(API_THRESHOLD))
+    
+    try:
+        db.session.add(fund)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(FUNDS_ENDPOINT, methods=['GET'])
+@tokenRequired
+def getFund(uid):
+    try:
+        data = request.get_json()
+        _fundId = data[API_FUND_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    fund = db.session.query(Fund).filter_by(Fund.owner_id==uid, Fund.id==_fundId).first()
+
+    if fund is None:
+        return jsonify(message=FUND_DOES_NOT_EXISTS_MESSAGE), 404
+
+    return jsonify(fund.dict()), 200
+
+@app.route(FUNDS_ENDPOINT, methods=['PATCH'])
+@tokenRequired
+def updateFund(uid):
+    try:
+        data = request.get_json()
+        _fundId = data[API_FUND_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    fund = db.session.query(Fund).filter_by(id=_fundId, owner_id=uid).first()
+
+    fields = data.keys()
+    if API_NAME in fields:
+        fund.name = data[API_NAME]
+    if API_BALANCE in fields:
+        fund.balance = data[API_BALANCE]
+    if API_START_TIME in fields:
+        fund.start_time = data[API_START_TIME]
+    if API_END_TIME in fields:
+        fund.end_time = data[API_END_TIME]
+    if API_THRESHOLD in fields:
+        fund.threshold = data[API_THRESHOLD]
+    
+    fund.updated_at = datetime.utcnow()
+
+    try:
+        db.session.add(fund)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(FUNDS_ENDPOINT, methods=['DELETE'])
+@tokenRequired
+def deleteFund(uid):
+    try:
+        data = request.get_json()
+        _fundId = data[API_FUND_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    fund = db.session.query(Fund).filter_by(id=_fundId, owner_id=uid).first()
+
+    if (fund is None):
+        return jsonify(message=FUND_DOES_NOT_EXISTS_MESSAGE), 404
+
+    try:
+        db.session.delete(fund)
+        db.session.commit()
+    except SQLAlchemyError as e:
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()

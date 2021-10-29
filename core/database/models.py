@@ -49,8 +49,8 @@ class UserAccount(db.Model):
             API_NAME: self.name,
             API_DASHBOARDS: dashboardDetails,
             API_FUNDS: fundDetails,
-            API_CREATED_AT: self.created_at,
-            API_UPDATED_AT: self.updated_at
+            API_CREATED_AT: self.created_at.isoformat(),
+            API_UPDATED_AT: self.updated_at.isoformat()
         }
         return result
     
@@ -60,7 +60,9 @@ class UserAccount(db.Model):
             API_EMAIL: self.email,
             API_NAME: self.name,
             API_DASHBOARDS: [x.id for x in self.dashboards],
-            API_FUNDS: [x.id for x in self.funds]
+            API_FUNDS: [x.id for x in self.funds],
+            API_CREATED_AT: self.created_at.isoformat(),
+            API_UPDATED_AT: self.updated_at.isoformat()
         }
         return result
 
@@ -83,8 +85,8 @@ class Dashboard(db.Model):
         result = {
             API_DASHBOARD_ID: str(self.id),
             API_NAME: self.name,
-            API_CREATED_AT: self.created_at,
-            API_UPDATED_AT: self.updated_at,
+            API_CREATED_AT: self.created_at.isoformat(),
+            API_UPDATED_AT: self.updated_at.isoformat(),
             API_TASKS: taskDetails,
         }
         return result
@@ -93,8 +95,8 @@ class Dashboard(db.Model):
         result = {
             API_DASHBOARD_ID: str(self.id),
             API_NAME: self.name,
-            API_CREATED_AT: self.created_at,
-            API_UPDATED_AT: self.updated_at,
+            API_CREATED_AT: self.created_at.isoformat(),
+            API_UPDATED_AT: self.updated_at.isoformat(),
             API_TASKS: [x.id for x in self.tasks],
         }
         return result
@@ -146,11 +148,11 @@ class Task(db.Model):
             API_STATUS: self.status,
             API_NOTI_LEVEL: self.notification_level,
             API_PRIORITY: self.priority,
-            API_START_TIME: self.start_time,
-            API_END_TIME: self.end_time,
+            API_START_TIME: self.start_time.isoformat() if self.start_time is not None else None,
+            API_END_TIME: self.end_time.isoformat() if self.start_time is not None else None,
             API_LABELS: self.labels,
-            API_CREATED_AT: self.created_at,
-            API_UPDATED_AT: self.updated_at
+            API_CREATED_AT: self.created_at.isoformat(),
+            API_UPDATED_AT: self.updated_at.isoformat()
         }
         return result
 
@@ -164,7 +166,7 @@ class Fund(db.Model):
     end_time = db.Column(db.DateTime, nullable=True)
     balance = db.Column(db.BigInteger, nullable=False)
     threshold = db.Column(db.BigInteger, nullable=True)
-    expenditures = db.relationship('Expenditure', backref='fund', lazy=True)
+    transactions = db.relationship('Transaction', backref='fund', lazy=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -180,27 +182,27 @@ class Fund(db.Model):
             self.threshold = threshold
 
     def dict(self):
-        expenditureDetails = []
+        transactionDetails = []
 
-        for exp in self.expenditures:
-            expenditureDetails.append(exp.dict())
+        for exp in self.transactions:
+            transactionDetails.append(exp.dict())
 
         result = {
             API_FUND_ID: str(self.id),
             API_NAME: self.name,
-            API_START_TIME: self.start_time,
-            API_END_TIME: self.end_time,
+            API_START_TIME: self.start_time.isoformat() if self.start_time is not None else None,
+            API_END_TIME: self.end_time.isoformat() if self.start_time is not None else None,
             API_BALANCE: self.balance,
             API_THRESHOLD: self.threshold,
-            API_EXPENDITURES: expenditureDetails,
-            API_CREATED_AT: self.created_at,
-            API_UPDATED_AT: self.updated_at
+            API_TRANSACTIONS: transactionDetails,
+            API_CREATED_AT: self.created_at.isoformat(),
+            API_UPDATED_AT: self.updated_at.isoformat()
         }
 
         return result
 
-class Expenditure(db.Model):
-    __tablename__ = 'expenditure'
+class Transaction(db.Model):
+    __tablename__ = 'transaction'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     fund_id = db.Column(UUID(as_uuid=True), db.ForeignKey('fund.id'), nullable=False)
     purposes = db.Column(db.UnicodeText, nullable=True)
@@ -219,13 +221,13 @@ class Expenditure(db.Model):
     
     def dict(self):
         result = {
-            API_EXPENDITURE_ID: str(self.id),
+            API_TRANSACTION_ID: str(self.id),
             API_FUND_ID: str(self.fund_id),
             API_PURPOSES: self.purposes,
             API_TIME: self.time,
             API_SPENDING: self.spending,
-            API_CREATED_AT: self.created_at,
-            API_UPDATED_AT: self.updated_at
+            API_CREATED_AT: self.created_at.isoformat(),
+            API_UPDATED_AT: self.updated_at.isoformat()
         }
         return result
 
