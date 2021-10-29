@@ -83,6 +83,7 @@ API_CREATED_AT = 'created_at'
 API_UPDATED_AT = 'updated_at'
 API_INVITED_BY = 'invited_by'
 API_ROLE = 'role'
+API_CONTENT = 'content'
 
 # Endpoints
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE

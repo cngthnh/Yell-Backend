@@ -76,7 +76,7 @@ class Dashboard(db.Model):
     __tablename__ = 'dashboard'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     name = db.Column(db.UnicodeText)
-    tasks = db.relationship('Task', lazy=True, backref='dashboard')
+    tasks = db.relationship('Task', lazy=True, backref='dashboard', cascade='all, delete-orphan')
     users = db.relationship('DashboardPermission', back_populates='dashboard', cascade='all, delete-orphan')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -118,7 +118,7 @@ class Task(db.Model):
     notification_level = db.Column(db.Integer, default = 0)
     priority = db.Column(db.Integer, default = 0)
     name = db.Column(db.UnicodeText)
-    content = db.Column(db.UnicodeText)
+    content = db.Column(db.UnicodeText, nullable=True)
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     labels = db.Column(db.String, nullable=True)
@@ -126,11 +126,13 @@ class Task(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, name, dashboard_id, status = None, notification_level = None, priority = None, parent_id=None, start_time=None, end_time=None, labels=None):
+    def __init__(self, name, dashboard_id, content=None, status = None, notification_level = None, priority = None, parent_id=None, start_time=None, end_time=None, labels=None):
         self.name = name
         self.dashboard_id = dashboard_id
         if status is not None:
             self.status = int(status)
+        if content is not None:
+            self.content = content
         if notification_level is not None:
             self.notification_level = int(notification_level)
         if priority is not None:
@@ -151,6 +153,7 @@ class Task(db.Model):
 
         result = {
             API_NAME: self.name,
+            API_CONTENT: self.content,
             API_TASK_ID: str(self.id),
             API_SUBTASKS: subtaskDetails,
             API_DASHBOARD_ID: str(self.dashboard_id),
