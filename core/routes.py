@@ -713,10 +713,14 @@ def getTransaction(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    transaction = db.session.query(Transaction).join(Fund.transactions).join(UserAccount.funds).\
-        filter(Transaction.id==transactionId, UserAccount.id==uid).first()
+    transaction = db.session.query(Transaction).filter_by(id==transactionId).first()
     if (transaction is None):
         return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
+
+    permissionCheck = db.session.query(Fund).join(UserAccount.funds).\
+        filter(Fund.id==transaction.fund_id, UserAccount.id==uid).first()
+    if permissionCheck is None:
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     return jsonify(transaction.dict()), 200
 
