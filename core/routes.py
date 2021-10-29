@@ -455,6 +455,7 @@ def confirmDashboardInvitation(token):
         dashboard = db.session.query(Dashboard).filter_by(id=tokenDict[API_DASHBOARD_ID]).first()
         user = db.session.query(UserAccount).filter_by(id=tokenDict[API_UID]).first()
         permission = DashboardPermission(dashboard, tokenDict[API_ROLE])
+        permission.user_id = tokenDict[API_UID]
         user.dashboards.append(permission)
     except Exception as e:
         print(str(e))
@@ -464,7 +465,7 @@ def confirmDashboardInvitation(token):
     try:
         db.session.add(user)
         db.session.commit()
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
