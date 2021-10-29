@@ -713,7 +713,7 @@ def getTransaction(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    transaction = db.session.query(Transaction).filter_by(id==transactionId).first()
+    transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
     if (transaction is None):
         return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
 
