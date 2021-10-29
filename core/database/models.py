@@ -200,6 +200,20 @@ class Fund(db.Model):
         }
 
         return result
+    
+    def compactDict(self):
+        result = {
+            API_FUND_ID: str(self.id),
+            API_NAME: self.name,
+            API_START_TIME: self.start_time.isoformat() if self.start_time is not None else None,
+            API_END_TIME: self.end_time.isoformat() if self.start_time is not None else None,
+            API_BALANCE: self.balance,
+            API_THRESHOLD: self.threshold,
+            API_TRANSACTIONS: [x.id for x in self.transactions],
+            API_CREATED_AT: self.created_at.isoformat(),
+            API_UPDATED_AT: self.updated_at.isoformat()
+        }
+        return result
 
 class Transaction(db.Model):
     __tablename__ = 'transaction'
