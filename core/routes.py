@@ -456,7 +456,9 @@ def confirmDashboardInvitation(token):
         user = db.session.query(UserAccount).filter_by(id=tokenDict[API_UID]).first()
         permission = DashboardPermission(dashboard, tokenDict[API_ROLE])
         user.dashboards.append(permission)
-    except Exception:
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
     try:
