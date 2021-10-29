@@ -75,7 +75,7 @@ class Dashboard(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     name = db.Column(db.UnicodeText)
     tasks = db.relationship('Task', lazy=True, backref='dashboard')
-    users = db.relationship('UserAccount', back_populates='dashboard')
+    users = db.relationship('DashboardPermission', back_populates='dashboard')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
