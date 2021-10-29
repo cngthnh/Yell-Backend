@@ -521,7 +521,7 @@ def getFund(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    fund = db.session.query(Fund).filter_by(Fund.owner_id==uid, Fund.id==_fundId).first()
+    fund = db.session.query(Fund).filter_by(owner_id=uid, id=_fundId).first()
 
     if fund is None:
         return jsonify(message=FUND_DOES_NOT_EXISTS_MESSAGE), 404
