@@ -14,7 +14,7 @@ jobs:
     # Write env
     - name: Prepare Environment
       env:
-        YELL_SIG_KEY: ${{ secrets.YELL_HS256_KEY }}
+        YELL_SIG_KEY: ${{ secrets.YELL_HS384_KEY }}
         YELL_ENC_KEY: ${{ secrets.YELL_A256GCM_KEY }}
         YELL_MAIL_USERNAME: ${{ secrets.YELL_MAIL_USERNAME }}
         YELL_MAIL_PASSWORD: ${{ secrets.YELL_MAIL_PASSWORD }}
