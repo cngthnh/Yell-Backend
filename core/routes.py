@@ -210,7 +210,7 @@ def deleteAccount(uid):
         return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
 
     try:
-        db.session.remove(user)
+        db.session.delete(user)
         db.session.commit()
     except SQLAlchemyError as e:
         db.session.rollback()
