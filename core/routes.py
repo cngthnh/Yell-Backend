@@ -185,6 +185,7 @@ def updateAccount(uid):
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     try:
+        user.updated_at = datetime.utcnow()
         db.session.add(user)
         db.session.commit()
     except SQLAlchemyError as e:
