@@ -69,7 +69,6 @@ def parseToken(token):
     """
     Check if the token is signed and have correct credentials
     Input: JWE (bytes or str)
-    Output: boolean
     """
     try:
         signedToken = decrypt(token)
@@ -78,9 +77,10 @@ def parseToken(token):
 
         tokenDict = decode(signedToken)
         if tokenDict[ISSUER_KEY] != YELL_ISSUER:
-            return None
-
-    except Exception:
+            return False
+    except jwt.ExpiredSignatureError:
         return None
+    except Exception:
+        return False
 
     return tokenDict

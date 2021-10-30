@@ -21,18 +21,19 @@ def tokenRequired(func):
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         # parse token => dict of info
-        infoDict = parseToken(token)
-        if infoDict is None:
-            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-
-        # check if account is valid in DB
         try:
-            if not checkAccount(infoDict[API_UID], infoDict[API_HASH]):
+            tokenDict = decode(token)
+            if tokenDict[ISSUER_KEY] != YELL_ISSUER:
                 return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+            if (tokenDict[API_TOKEN_TYPE]!=ACCESS_TOKEN_TYPE):
+                return jsonify(message=ACCESS_TOKEN_REQUIRED_MESSAGE), 403
+
+        except jwt.ExpiredSignatureError:
+            return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
         except Exception:
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-
-        return func(*args, **kwargs, uid=infoDict[API_UID])
+        
+        return func(*args, **kwargs, uid=tokenDict[API_UID])
     return tokenCheck
 
 @app.route('/')
@@ -50,8 +51,12 @@ def getToken():
 
     try:
         if checkAccount(_uid, _hash):
-            _tokenDict = {API_UID: _uid, API_HASH: _hash}
-            return jsonify(token=generateToken(_tokenDict).decode('UTF-8'))
+            _accessTokenDict = {API_UID: _uid, API_HASH: _hash, API_TOKEN_TYPE: ACCESS_TOKEN_TYPE}
+            _refreshTokenDict = {API_UID: _uid, API_HASH: _hash, API_TOKEN_TYPE: REFRESH_TOKEN_TYPE}
+            return jsonify(
+                        access_token=encode(_accessTokenDict),
+                        refresh_token=encode(_refreshTokenDict)
+                        ), 200
         return jsonify(message=INACTIVATED_ACCOUNT_MESSAGE), 401
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
@@ -69,7 +74,7 @@ def verifyAccount(token):
     try:
         tokenDict = decode(token)
     except jwt.ExpiredSignatureError:
-        return jsonify(message=EXPIRED_TOKEN_MESSAGE)
+        return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
 
     try:
         result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
@@ -452,7 +457,7 @@ def confirmDashboardInvitation(token):
     try:
         tokenDict = decode(token)
     except jwt.ExpiredSignatureError:
-        return jsonify(message=EXPIRED_TOKEN_MESSAGE)
+        return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
 
     try:
         dashboard = db.session.query(Dashboard).filter_by(id=tokenDict[API_DASHBOARD_ID]).first()
