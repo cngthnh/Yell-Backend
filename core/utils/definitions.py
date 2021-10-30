@@ -26,6 +26,8 @@ REFRESH_TOKEN_TYPE = 'refresh'
 INVALID_TOKEN_MESSAGE = 'INVALID_TOKEN' # None / can't be decrypt / fault signature tokens
 INVALID_CREDENTIALS_MESSAGE = 'INVALID_CREDENTIALS' # None / invalid uid or hash
 INVALID_DATA_MESSAGE = 'INVALID_DATA' # general use
+INVALID_NAME_MESSAGE = 'INVALID_NAME'
+INVALID_HASH_MESSAGE = 'INVALID_HASH'
 OK_MESSAGE = 'OK' #general use
 FAILED_MESSAGE = 'FAILED' # general use
 INVALID_EMAIL_MESSAGE = 'INVALID_EMAIL' # email addresses with undefined format or being used by another account
@@ -97,8 +99,7 @@ API_TOKEN_TYPE = 'token_type'
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE
 EMAIL_VRF_ENDPOINT = '/api/users/verify/<token>' # GET
 EMAIL_VRF_SIGNATURE = '/api/users/verify/'
-AUTH_ENDPOINT = '/api/users/auth' # POST
-REFRESH_ENDPOINT = '/api/users/auth/refresh' # GET
+AUTH_ENDPOINT = '/api/users/auth' # GET, POST
 AUTHORIZED_TEST_ENDPOINT = '/api/users/authorized' 
 USERS_CHECK_ENDPOINT = '/api/check' # GET
 TASKS_ENDPOINT = '/api/tasks' # GET, POST, PATCH, DELETE
@@ -108,3 +109,9 @@ DASHBOARD_INVITATION_ENDPOINT = '/api/dashboards/invitation/<token>' # GET
 DASHBOARD_INVITATION_SIGNATURE = '/api/dashboards/invitation/'
 FUNDS_ENDPOINT = '/api/funds' # GET, POST, PATCH, DELETE
 TRANSACTIONS_ENDPOINT = '/api/transactions' # GET, POST, PATCH, DELETE
+
+# regex
+REGEX_EMAIL = '\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+REGEX_UID = '^(?=[a-zA-Z0-9._]{6,64}$)(?!.*[_.]{2})[^_.].*[^_.]$'
+REGEX_NAME = '^(?:[\p{L}\p{Mn}\p{Pd}\'\x{2019}]+\s[\p{L}\p{Mn}\p{Pd}\'\x{2019}]+\s?)+$'
+REGEX_HASH = '[0-9a-fA-F]{64}'

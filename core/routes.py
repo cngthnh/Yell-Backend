@@ -1,3 +1,4 @@
+import re
 from sqlalchemy.exc import SQLAlchemyError
 from .utils.cipher import *
 from flask import request, jsonify
@@ -49,6 +50,11 @@ def getToken():
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
+    if (not re.fullmatch(REGEX_UID, _uid)):
+        return jsonify(message=INVALID_UID_MESSAGE), 400
+    if (not re.fullmatch(REGEX_HASH, _hash)):
+        return jsonify(message=INVALID_HASH_MESSAGE), 400
+
     try:
         if checkAccount(_uid, _hash):
             _accessTokenDict = {API_UID: _uid, API_TOKEN_TYPE: ACCESS_TOKEN_TYPE}
@@ -61,7 +67,7 @@ def getToken():
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
-@app.route(REFRESH_ENDPOINT, methods=['GET'])
+@app.route(AUTH_ENDPOINT, methods=['GET'])
 def refreshToken():
     try:
         token = request.headers['Authorization']
@@ -116,12 +122,21 @@ def verifyAccount(token):
 def createAccount():
     try:
         data = request.get_json()
-        _uid = data[API_UID]
-        _email = data[API_EMAIL]
-        _hash = data[API_HASH]
-        _name = data[API_NAME]
+        _uid = str(data[API_UID])
+        _email = str(data[API_EMAIL])
+        _hash = str(data[API_HASH]).lower()
+        _name = str(data[API_NAME])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    if (not re.fullmatch(REGEX_UID, _uid)):
+        return jsonify(message=INVALID_UID_MESSAGE), 400
+    if (not re.fullmatch(REGEX_EMAIL, _email)):
+        return jsonify(message=INVALID_EMAIL_MESSAGE), 400
+    if (not re.fullmatch(REGEX_NAME, _name)):
+        return jsonify(message=INVALID_NAME_MESSAGE), 400
+    if (not re.fullmatch(REGEX_HASH, _hash)):
+        return jsonify(message=INVALID_HASH_MESSAGE), 400
 
     user = UserAccount(_uid, _email, _name, _hash)
     db.session.add(user)
@@ -136,9 +151,7 @@ def createAccount():
 
     sendVerificationEmail(_email, encode({API_UID: _uid, API_EMAIL: _email}, EMAIL_VERIFICATION_TIME), _name)
 
-    token = generateToken({API_UID: _uid, API_HASH: _hash}).decode('UTF-8')
-
-    return jsonify(message=PENDING_VERIFICATION_MESSAGE, token = token), 201
+    return jsonify(message=PENDING_VERIFICATION_MESSAGE), 200
 
 @app.route(USERS_CHECK_ENDPOINT, methods=['GET'])
 def checkAvailability():
@@ -166,7 +179,7 @@ def checkAvailability():
 def createDashboard(uid):
     try:
         data = request.get_json()
-        _name = data[API_NAME]
+        _name = str(data[API_NAME])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
@@ -190,8 +203,8 @@ def createDashboard(uid):
 def createTask(uid):
     try:
         data = request.get_json()
-        _name = data[API_NAME]
-        _dashboardId = data[API_DASHBOARD_ID]
+        _name = str(data[API_NAME])
+        _dashboardId = str(data[API_DASHBOARD_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
@@ -210,18 +223,29 @@ def createTask(uid):
         return jsonify(message=INVALID_DASHBOARD_MESSAGE), 403
 
     task = Task(_name,
-                _dashboardId,
-                data.get(API_STATUS), 
-                data.get(API_NOTI_LEVEL), 
-                data.get(API_PRIORITY),
-                data.get(API_PARENT_ID),
-                data.get(API_START_TIME),
-                data.get(API_END_TIME),
-                data.get(API_LABELS))
+                _dashboardId)
     
-    currentDashboard.tasks.append(task)
+    fields = data.keys()
+    try:
+        if (API_STATUS in fields):
+            task.status = int(data[API_STATUS])
+        if (API_NOTI_LEVEL in fields):
+            task.notification_level = int(data[API_NOTI_LEVEL])
+        if (API_PRIORITY in fields):
+            task.priority = int(data[API_PRIORITY])
+        if (API_PARENT_ID in fields):
+            task.parent_id = str(data[API_PARENT_ID])
+        if (API_START_TIME in fields):
+            task.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
+        if (API_END_TIME in fields):
+            task.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
+        if (API_LABELS in fields):
+            task.labels = str(data[API_LABELS])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     try:
+        currentDashboard.tasks.append(task)
         db.session.add(currentDashboard)
         db.session.commit()
     except SQLAlchemyError:
@@ -237,7 +261,7 @@ def createTask(uid):
 def updateTask(uid):
     try:
         data = request.get_json()
-        _taskId = data[API_TASK_ID]
+        _taskId = str(data[API_TASK_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -314,7 +338,7 @@ def getUserProfile(uid):
 @tokenRequired
 def getDashboard(uid):
     try:
-        dashboard_id = request.args[API_DASHBOARD_ID]
+        dashboard_id = str(request.args[API_DASHBOARD_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
@@ -387,9 +411,9 @@ def updateDashboard(uid):
 def grantDashboardPermission(uid):
     try:
         data = request.get_json()
-        _dashboardId = data[API_DASHBOARD_ID]
-        _targetUserId = data[API_UID]
-        _role = data[API_ROLE]
+        _dashboardId = str(data[API_DASHBOARD_ID])
+        _targetUserId = str(data[API_UID])
+        _role = str(data[API_ROLE])
         if _role not in DASHBOARD_ROLES:
             raise Exception()
     except Exception:
@@ -442,8 +466,8 @@ def grantDashboardPermission(uid):
 def removeDashboardPermission(uid):
     try:
         data = request.get_json()
-        _dashboardId = data[API_DASHBOARD_ID]
-        _targetUserId = data[API_UID]
+        _dashboardId = str(data[API_DASHBOARD_ID])
+        _targetUserId = str(data[API_UID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
@@ -517,7 +541,7 @@ def confirmDashboardInvitation(token):
 def deleteDashboard(uid):
     try:
         data = request.get_json()
-        _dashboardId = data[API_DASHBOARD_ID]
+        _dashboardId = str(data[API_DASHBOARD_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
@@ -550,7 +574,7 @@ def deleteDashboard(uid):
 @tokenRequired
 def getTask(uid):
     try:
-        _taskId = request.args[API_TASK_ID]
+        _taskId = str(request.args[API_TASK_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -575,7 +599,7 @@ def getTask(uid):
 def deleteTask(uid):
     try:
         data = request.get_json()
-        _taskId = data[API_TASK_ID]
+        _taskId = str(data[API_TASK_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -609,18 +633,27 @@ def deleteTask(uid):
 def createFund(uid):
     try:
         data = request.get_json()
-        name = data[API_NAME]
-        balance = data[API_BALANCE]
+        name = str(data[API_NAME])
+        balance = int(data[API_BALANCE])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     fund = Fund(uid, 
                 name, 
-                balance, 
-                data.get(API_START_TIME), 
-                data.get(API_END_TIME), 
-                data.get(API_THRESHOLD))
+                balance)
     
+    fields = data.keys()
+
+    try:
+        if (API_START_TIME in fields):
+            fund.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
+        if (API_END_TIME in fields):
+            fund.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
+        if (API_THRESHOLD in fields):
+            fund.threshold = datetime.fromisoformat(str(data[API_THRESHOLD]))
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
     try:
         db.session.add(fund)
         db.session.commit()
@@ -636,7 +669,7 @@ def createFund(uid):
 @tokenRequired
 def getFund(uid):
     try:
-        _fundId = request.args[API_FUND_ID]
+        _fundId = str(request.args[API_FUND_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -658,7 +691,7 @@ def getFund(uid):
 def updateFund(uid):
     try:
         data = request.get_json()
-        _fundId = data[API_FUND_ID]
+        _fundId = str(data[API_FUND_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -698,7 +731,7 @@ def updateFund(uid):
 def deleteFund(uid):
     try:
         data = request.get_json()
-        _fundId = data[API_FUND_ID]
+        _fundId = str(data[API_FUND_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -723,8 +756,8 @@ def deleteFund(uid):
 def createTransaction(uid):
     try:
         data = request.get_json()
-        amount = data[API_AMOUNT]
-        fundId = data[API_FUND_ID]
+        amount = int(data[API_AMOUNT])
+        fundId = str(data[API_FUND_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -732,7 +765,17 @@ def createTransaction(uid):
     if (currentFund is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
-    transaction = Transaction(fundId, amount, data.get(API_PURPOSES), data.get(API_TIME))
+    transaction = Transaction(fundId, amount)
+
+    fields = data.keys()
+    try:
+        if (API_PURPOSES in fields):
+            transaction.purposes = str(data[API_PURPOSES])
+        if (API_TIME in fields):
+            transaction.time = datetime.fromisoformat(str(data[API_TIME]))
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
     try:
         currentFund.transactions.append(transaction)
         db.session.add(currentFund)
@@ -749,7 +792,7 @@ def createTransaction(uid):
 @tokenRequired
 def getTransaction(uid):
     try:
-        transactionId = request.args[API_TRANSACTION_ID]
+        transactionId = str(request.args[API_TRANSACTION_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -769,7 +812,7 @@ def getTransaction(uid):
 def updateTransaction(uid):
     try:
         data = request.get_json()
-        transactionId = data[API_TRANSACTION_ID]
+        transactionId = str(data[API_TRANSACTION_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -811,7 +854,7 @@ def updateTransaction(uid):
 def deleteTransaction(uid):
     try:
         data = request.get_json()
-        transactionId = data[API_TRANSACTION_ID]
+        transactionId = str(data[API_TRANSACTION_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
