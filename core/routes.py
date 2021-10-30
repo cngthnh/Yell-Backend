@@ -787,9 +787,9 @@ def updateTransaction(uid):
         if API_PURPOSES in fields:
             transaction.purposes = str(data[API_PURPOSES])
         if API_TIME in fields:
-            transaction.purposes = datetime.fromisoformat(data[API_TIME])
+            transaction.time = datetime.fromisoformat(data[API_TIME])
         if API_AMOUNT in fields:
-            transaction.purposes = int(data[API_AMOUNT])
+            transaction.amount = int(data[API_AMOUNT])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
