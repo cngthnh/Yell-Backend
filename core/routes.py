@@ -45,8 +45,8 @@ def homepage():
 def getToken():
     try:
         data = request.get_json()
-        _uid = data[API_UID]
-        _hash = data[API_HASH]
+        _uid = str(data[API_UID])
+        _hash = str(data[API_HASH]).lower()
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
@@ -152,6 +152,76 @@ def createAccount():
     sendVerificationEmail(_email, encode({API_UID: _uid, API_EMAIL: _email}, EMAIL_VERIFICATION_TIME), _name)
 
     return jsonify(message=PENDING_VERIFICATION_MESSAGE), 200
+
+@app.route(USERS_ENDPOINT, methods=['PATCH'])
+@tokenRequired
+def updateAccount(uid):
+    try:
+        data = request.get_json()
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    fields = data.keys()
+    
+    if (not re.fullmatch(REGEX_UID, uid)):
+            return jsonify(message=INVALID_UID_MESSAGE), 400
+    user = db.session.query(UserAccount).filter_by(id=uid).first()
+    if (user is None):
+        return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
+
+    emailChanged = False
+    try:
+        if (API_EMAIL in fields):
+            user.email = str(data[API_EMAIL])
+            if (not re.fullmatch(REGEX_EMAIL, user.email)):
+                return jsonify(message=INVALID_EMAIL_MESSAGE), 400
+            user.confirmed = False
+            emailChanged = True
+        if (API_NAME in fields):
+            user.name = str(data[API_NAME])
+            if (not re.fullmatch(REGEX_NAME, user.name)):
+                return jsonify(message=INVALID_NAME_MESSAGE), 400
+        if (API_HASH in fields):
+            user.hash = str(data[API_HASH])
+            if (not re.fullmatch(REGEX_HASH, user.hash)):
+                return jsonify(message=INVALID_HASH_MESSAGE), 400
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(str(e))
+        sys.stdout.flush()
+        return jsonify(message=FAILED_MESSAGE), 400
+
+    if emailChanged:
+        sendVerificationEmail(user.email, encode({API_UID: uid, API_EMAIL: user.email}, EMAIL_VERIFICATION_TIME), user.name)
+        return jsonify(message=PENDING_VERIFICATION_MESSAGE), 200
+
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(USERS_ENDPOINT, methods=['DELETE'])
+@tokenRequired
+def deleteAccount(uid):
+    if (not re.fullmatch(REGEX_UID, uid)):
+            return jsonify(message=INVALID_UID_MESSAGE), 400
+    user = db.session.query(UserAccount).filter_by(id=uid).first()
+    if (user is None):
+        return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
+
+    try:
+        db.session.remove(user)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(str(e))
+        sys.stdout.flush()
+        return jsonify(message=FAILED_MESSAGE), 400
+
+    return jsonify(message=SUCCEED_MESSAGE), 200
 
 @app.route(USERS_CHECK_ENDPOINT, methods=['GET'])
 def checkAvailability():
