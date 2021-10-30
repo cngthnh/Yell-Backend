@@ -133,8 +133,6 @@ def createAccount():
         return jsonify(message=INVALID_UID_MESSAGE), 400
     if (not re.fullmatch(REGEX_EMAIL, _email)):
         return jsonify(message=INVALID_EMAIL_MESSAGE), 400
-    if (not re.fullmatch(REGEX_NAME, _name)):
-        return jsonify(message=INVALID_NAME_MESSAGE), 400
     if (not re.fullmatch(REGEX_HASH, _hash)):
         return jsonify(message=INVALID_HASH_MESSAGE), 400
 
@@ -179,8 +177,6 @@ def updateAccount(uid):
             emailChanged = True
         if (API_NAME in fields):
             user.name = str(data[API_NAME])
-            if (not re.fullmatch(REGEX_NAME, user.name)):
-                return jsonify(message=INVALID_NAME_MESSAGE), 400
         if (API_HASH in fields):
             user.hash = str(data[API_HASH])
             if (not re.fullmatch(REGEX_HASH, user.hash)):

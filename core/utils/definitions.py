@@ -113,5 +113,4 @@ TRANSACTIONS_ENDPOINT = '/api/transactions' # GET, POST, PATCH, DELETE
 # regex
 REGEX_EMAIL = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
 REGEX_UID = r'^(?=[a-zA-Z0-9._]{6,64}$)(?!.*[_.]{2})[^_.].*[^_.]$'
-REGEX_NAME = r'([\u0000-\uFFFFA-Za-z\s\']+)'
 REGEX_HASH = r'[0-9a-fA-F]{64}'
