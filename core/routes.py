@@ -733,7 +733,59 @@ def updateTransaction(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    transaction = db.session.query(Transaction).join(Fund.transactions, UserAccount.funds).\
-        filter(Transaction.id==transactionId, UserAccount.id==uid).first()
+    transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
     if (transaction is None):
         return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
+
+    permissionCheck = db.session.query(Fund).join(UserAccount.funds).\
+        filter(Fund.id==transaction.fund_id, UserAccount.id==uid).first()
+    if permissionCheck is None:
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    fields = data.keys()
+    if API_PURPOSES in fields:
+        transaction.purposes = data[API_PURPOSES]
+    if API_TIME in fields:
+        transaction.purposes = datetime.fromisoformat(data[API_TIME])
+    
+    transaction.updated_at = datetime.utcnow()
+
+    try:
+        db.session.add(transaction)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(TRANSACTIONS_ENDPOINT, methods=['DELETE'])
+@tokenRequired
+def deleteTransaction(uid):
+    try:
+        data = request.get_json()
+        transactionId = data[API_TRANSACTION_ID]
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
+    if (transaction is None):
+        return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
+
+    permissionCheck = db.session.query(Fund).join(UserAccount.funds).\
+        filter(Fund.id==transaction.fund_id, UserAccount.id==uid).first()
+    if permissionCheck is None:
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+    
+    try:
+        db.session.delete(transaction)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
