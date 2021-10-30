@@ -61,7 +61,7 @@ def getToken():
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
-@app.route(REFRESH_ENDPOINT, methods=['POST'])
+@app.route(REFRESH_ENDPOINT, methods=['GET'])
 def refreshToken():
     try:
         token = request.headers['Authorization']
@@ -82,7 +82,7 @@ def refreshToken():
         
         _accessTokenDict = {API_UID: tokenDict[API_UID], API_TOKEN_TYPE: ACCESS_TOKEN_TYPE}
         return jsonify(access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME))
-        
+
     except jwt.ExpiredSignatureError:
         return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
     except Exception:
@@ -256,24 +256,28 @@ def updateTask(uid):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     fields = data.keys()
-    if API_NAME in fields:
-        task.name = data[API_NAME]
-    if API_STATUS in fields:
-        task.status = data[API_STATUS]
-    if API_NOTI_LEVEL in fields:
-        task.notification_level = data[API_NOTI_LEVEL]
-    if API_PRIORITY in fields:
-        task.priority = data[API_PRIORITY]
-    if API_PARENT_ID in fields:
-        task.parent_id = data[API_PARENT_ID]
-    if API_START_TIME in fields:
-        task.start_time = data[API_START_TIME]
-    if API_END_TIME in fields:
-        task.end_time = data[API_END_TIME]
-    if API_LABELS in fields:
-        task.labels = data[API_LABELS]
-    if API_DASHBOARD_ID in fields:
-        task.dashboard_id = data[API_DASHBOARD_ID]
+
+    try:
+        if API_NAME in fields:
+            task.name = str(data[API_NAME])
+        if API_STATUS in fields:
+            task.status = int(data[API_STATUS])
+        if API_NOTI_LEVEL in fields:
+            task.notification_level = int(data[API_NOTI_LEVEL])
+        if API_PRIORITY in fields:
+            task.priority = int(data[API_PRIORITY])
+        if API_PARENT_ID in fields:
+            task.parent_id = str(data[API_PARENT_ID])
+        if API_START_TIME in fields:
+            task.start_time = datetime.fromisoformat(data[API_START_TIME])
+        if API_END_TIME in fields:
+            task.end_time = datetime.fromisoformat(data[API_END_TIME])
+        if API_LABELS in fields:
+            task.labels = str(data[API_LABELS])
+        if API_DASHBOARD_ID in fields:
+            task.dashboard_id = str(data[API_DASHBOARD_ID])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     task.updated_at = datetime.utcnow()
 
@@ -363,7 +367,7 @@ def updateDashboard(uid):
     fields = data.keys()
     
     if API_NAME in fields:
-        dashboard.name = data[API_NAME]
+        dashboard.name = str(data[API_NAME])
     
     dashboard.updated_at = datetime.utcnow()
 
@@ -661,16 +665,20 @@ def updateFund(uid):
     fund = db.session.query(Fund).filter_by(id=_fundId, owner_id=uid).first()
 
     fields = data.keys()
-    if API_NAME in fields:
-        fund.name = data[API_NAME]
-    if API_BALANCE in fields:
-        fund.balance = data[API_BALANCE]
-    if API_START_TIME in fields:
-        fund.start_time = data[API_START_TIME]
-    if API_END_TIME in fields:
-        fund.end_time = data[API_END_TIME]
-    if API_THRESHOLD in fields:
-        fund.threshold = data[API_THRESHOLD]
+
+    try:
+        if API_NAME in fields:
+            fund.name = str(data[API_NAME])
+        if API_BALANCE in fields:
+            fund.balance = int(data[API_BALANCE])
+        if API_START_TIME in fields:
+            fund.start_time = datetime.fromisoformat(data[API_START_TIME])
+        if API_END_TIME in fields:
+            fund.end_time = datetime.fromisoformat(data[API_END_TIME])
+        if API_THRESHOLD in fields:
+            fund.threshold = int(data[API_THRESHOLD])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
     
     fund.updated_at = datetime.utcnow()
 
@@ -774,11 +782,16 @@ def updateTransaction(uid):
     if permissionCheck is None:
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
-    fields = data.keys()
-    if API_PURPOSES in fields:
-        transaction.purposes = data[API_PURPOSES]
-    if API_TIME in fields:
-        transaction.purposes = datetime.fromisoformat(data[API_TIME])
+    try:
+        fields = data.keys()
+        if API_PURPOSES in fields:
+            transaction.purposes = str(data[API_PURPOSES])
+        if API_TIME in fields:
+            transaction.purposes = datetime.fromisoformat(data[API_TIME])
+        if API_AMOUNT in fields:
+            transaction.purposes = int(data[API_AMOUNT])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
     
     transaction.updated_at = datetime.utcnow()
 
