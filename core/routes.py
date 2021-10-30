@@ -51,16 +51,43 @@ def getToken():
 
     try:
         if checkAccount(_uid, _hash):
-            _accessTokenDict = {API_UID: _uid, API_HASH: _hash, API_TOKEN_TYPE: ACCESS_TOKEN_TYPE}
-            _refreshTokenDict = {API_UID: _uid, API_HASH: _hash, API_TOKEN_TYPE: REFRESH_TOKEN_TYPE}
+            _accessTokenDict = {API_UID: _uid, API_TOKEN_TYPE: ACCESS_TOKEN_TYPE}
+            _refreshTokenDict = {API_UID: _uid, API_TOKEN_TYPE: REFRESH_TOKEN_TYPE}
             return jsonify(
-                        access_token=encode(_accessTokenDict),
+                        access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME),
                         refresh_token=encode(_refreshTokenDict)
                         ), 200
         return jsonify(message=INACTIVATED_ACCOUNT_MESSAGE), 401
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
+@app.route(REFRESH_ENDPOINT, methods=['POST'])
+def refreshToken():
+    try:
+        token = request.headers['Authorization']
+    except Exception:
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+
+    schema, token = token.split(maxsplit=1)
+    if schema!='Bearer':
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+
+    # parse token => dict of info
+    try:
+        tokenDict = decode(token)
+        if tokenDict[ISSUER_KEY] != YELL_ISSUER:
+            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+        if (tokenDict[API_TOKEN_TYPE]!=REFRESH_TOKEN_TYPE):
+            return jsonify(message=REFRESH_TOKEN_REQUIRED_MESSAGE), 403
+        
+        _accessTokenDict = {API_UID: tokenDict[API_UID], API_TOKEN_TYPE: ACCESS_TOKEN_TYPE}
+        return jsonify(access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME))
+        
+    except jwt.ExpiredSignatureError:
+        return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
+    except Exception:
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+    
 @app.route(AUTHORIZED_TEST_ENDPOINT, methods=['POST'])
 @tokenRequired
 def authorized(uid):
