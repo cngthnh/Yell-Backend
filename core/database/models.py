@@ -28,7 +28,7 @@ class UserAccount(db.Model):
     hash = db.Column(db.String(64))
     confirmed = db.Column(db.Boolean)
     dashboards = db.relationship('DashboardPermission', back_populates='user', cascade='all, delete-orphan')
-    funds = db.relationship('Fund', backref='owner', lazy=True, cascade='all, delete-orphan')
+    budgets = db.relationship('Budget', backref='owner', lazy=True, cascade='all, delete-orphan')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -41,20 +41,20 @@ class UserAccount(db.Model):
     
     def dict(self):
         dashboardDetails = []
-        fundDetails = []
+        budgetDetails = []
 
         for dashboard in self.dashboards:
             dashboardDetails.append(dashboard.dict())
 
-        for fund in self.funds:
-            fundDetails.append(fund.dict())
+        for budget in self.budgets:
+            budgetDetails.append(budget.dict())
 
         result = {
             API_UID: self.id,
             API_EMAIL: self.email,
             API_NAME: self.name,
             API_DASHBOARDS: dashboardDetails,
-            API_FUNDS: fundDetails,
+            API_BUDGETS: budgetDetails,
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
         }
@@ -66,7 +66,7 @@ class UserAccount(db.Model):
             API_EMAIL: self.email,
             API_NAME: self.name,
             API_DASHBOARDS: [x.dashboard_id for x in self.dashboards],
-            API_FUNDS: [x.id for x in self.funds],
+            API_BUDGETS: [x.id for x in self.budgets],
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
         }
@@ -169,8 +169,8 @@ class Task(db.Model):
         return result
 
 
-class Fund(db.Model):
-    __tablename__ = 'fund'
+class Budget(db.Model):
+    __tablename__ = 'budget'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     owner_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), nullable=False)
     name = db.Column(db.UnicodeText, nullable=False)
@@ -178,7 +178,7 @@ class Fund(db.Model):
     end_time = db.Column(db.DateTime, nullable=True)
     balance = db.Column(db.BigInteger, nullable=False)
     threshold = db.Column(db.BigInteger, nullable=True)
-    transactions = db.relationship('Transaction', backref='fund', lazy=True, cascade='all, delete-orphan')
+    transactions = db.relationship('Transaction', backref='budget', lazy=True, cascade='all, delete-orphan')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -200,7 +200,7 @@ class Fund(db.Model):
             transactionDetails.append(exp.dict())
 
         result = {
-            API_FUND_ID: str(self.id),
+            API_BUDGET_ID: str(self.id),
             API_NAME: self.name,
             API_START_TIME: self.start_time.isoformat() if self.start_time is not None else None,
             API_END_TIME: self.end_time.isoformat() if self.start_time is not None else None,
@@ -215,7 +215,7 @@ class Fund(db.Model):
     
     def compactDict(self):
         result = {
-            API_FUND_ID: str(self.id),
+            API_BUDGET_ID: str(self.id),
             API_NAME: self.name,
             API_START_TIME: self.start_time.isoformat() if self.start_time is not None else None,
             API_END_TIME: self.end_time.isoformat() if self.start_time is not None else None,
@@ -230,15 +230,15 @@ class Fund(db.Model):
 class Transaction(db.Model):
     __tablename__ = 'transaction'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    fund_id = db.Column(UUID(as_uuid=True), db.ForeignKey('fund.id'), nullable=False)
+    budget_id = db.Column(UUID(as_uuid=True), db.ForeignKey('budget.id'), nullable=False)
     purposes = db.Column(db.UnicodeText, nullable=True)
     time = db.Column(db.DateTime, nullable=True)
     amount = db.Column(db.BigInteger, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, fund_id, amount, purposes=None, time=None):
-        self.fund_id = fund_id
+    def __init__(self, budget_id, amount, purposes=None, time=None):
+        self.budget_id = budget_id
         self.amount = amount
         if purposes is not None:
             self.purposes = purposes
@@ -248,7 +248,7 @@ class Transaction(db.Model):
     def dict(self):
         result = {
             API_TRANSACTION_ID: str(self.id),
-            API_FUND_ID: str(self.fund_id),
+            API_BUDGET_ID: str(self.budget_id),
             API_PURPOSES: self.purposes,
             API_TIME: self.time,
             API_AMOUNT: self.amount,

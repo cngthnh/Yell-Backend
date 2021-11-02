@@ -308,6 +308,8 @@ def createTask(uid):
             task.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
         if (API_LABELS in fields):
             task.labels = str(data[API_LABELS])
+        if (API_CONTENT in fields):
+            task.content = str(data[API_CONTENT])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
@@ -365,7 +367,17 @@ def updateTask(uid):
             task.end_time = datetime.fromisoformat(data[API_END_TIME])
         if API_LABELS in fields:
             task.labels = str(data[API_LABELS])
+        if API_CONTENT in fields:
+            task.content = str(data[API_CONTENT])
         if API_DASHBOARD_ID in fields:
+            permissionCheck = db.session.query(DashboardPermission). \
+                filter_by(user_id=uid, dashboard_id=data[API_DASHBOARD_ID]).first()
+
+            if (permissionCheck is None):
+                return jsonify(message=FORBIDDEN_MESSAGE), 403
+            if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+                return jsonify(message=FORBIDDEN_MESSAGE), 403
+
             task.dashboard_id = str(data[API_DASHBOARD_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
@@ -695,9 +707,9 @@ def deleteTask(uid):
 
     return jsonify(message=SUCCEED_MESSAGE), 200
 
-@app.route(FUNDS_ENDPOINT, methods=['POST'])
+@app.route(BUDGETS_ENDPOINT, methods=['POST'])
 @tokenRequired
-def createFund(uid):
+def createBudget(uid):
     try:
         data = request.get_json()
         name = str(data[API_NAME])
@@ -705,7 +717,7 @@ def createFund(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    fund = Fund(uid, 
+    budget = Budget(uid, 
                 name, 
                 balance)
     
@@ -713,16 +725,16 @@ def createFund(uid):
 
     try:
         if (API_START_TIME in fields):
-            fund.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
+            budget.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
         if (API_END_TIME in fields):
-            fund.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
+            budget.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
         if (API_THRESHOLD in fields):
-            fund.threshold = datetime.fromisoformat(str(data[API_THRESHOLD]))
+            budget.threshold = datetime.fromisoformat(str(data[API_THRESHOLD]))
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     try:
-        db.session.add(fund)
+        db.session.add(budget)
         db.session.commit()
     except SQLAlchemyError as e:
         print(str(e))
@@ -730,60 +742,60 @@ def createFund(uid):
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 400
     
-    return jsonify(message=SUCCEED_MESSAGE, fund_id=fund.id), 200
+    return jsonify(message=SUCCEED_MESSAGE, budget_id=budget.id), 200
 
-@app.route(FUNDS_ENDPOINT, methods=['GET'])
+@app.route(BUDGETS_ENDPOINT, methods=['GET'])
 @tokenRequired
-def getFund(uid):
+def getBudget(uid):
     try:
-        _fundId = str(request.args[API_FUND_ID])
+        _budgetId = str(request.args[API_BUDGET_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    fund = db.session.query(Fund).filter_by(owner_id=uid, id=_fundId).first()
+    budget = db.session.query(Budget).filter_by(owner_id=uid, id=_budgetId).first()
 
-    if fund is None:
-        return jsonify(message=FUND_DOES_NOT_EXISTS_MESSAGE), 404
+    if budget is None:
+        return jsonify(message=BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
 
     fetchType = request.args.get(API_FETCH)
     if (fetchType==API_FULL):
-        return jsonify(fund.dict()), 200
+        return jsonify(budget.dict()), 200
     elif (fetchType==API_COMPACT):
-        return jsonify(fund.compactDict()), 200
+        return jsonify(budget.compactDict()), 200
     else:
-        return jsonify(fund.compactDict()), 200
+        return jsonify(budget.compactDict()), 200
 
-@app.route(FUNDS_ENDPOINT, methods=['PATCH'])
+@app.route(BUDGETS_ENDPOINT, methods=['PATCH'])
 @tokenRequired
-def updateFund(uid):
+def updateBudget(uid):
     try:
         data = request.get_json()
-        _fundId = str(data[API_FUND_ID])
+        _budgetId = str(data[API_BUDGET_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    fund = db.session.query(Fund).filter_by(id=_fundId, owner_id=uid).first()
+    budget = db.session.query(Budget).filter_by(id=_budgetId, owner_id=uid).first()
 
     fields = data.keys()
 
     try:
         if API_NAME in fields:
-            fund.name = str(data[API_NAME])
+            budget.name = str(data[API_NAME])
         if API_BALANCE in fields:
-            fund.balance = int(data[API_BALANCE])
+            budget.balance = int(data[API_BALANCE])
         if API_START_TIME in fields:
-            fund.start_time = datetime.fromisoformat(data[API_START_TIME])
+            budget.start_time = datetime.fromisoformat(data[API_START_TIME])
         if API_END_TIME in fields:
-            fund.end_time = datetime.fromisoformat(data[API_END_TIME])
+            budget.end_time = datetime.fromisoformat(data[API_END_TIME])
         if API_THRESHOLD in fields:
-            fund.threshold = int(data[API_THRESHOLD])
+            budget.threshold = int(data[API_THRESHOLD])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    fund.updated_at = datetime.utcnow()
+    budget.updated_at = datetime.utcnow()
 
     try:
-        db.session.add(fund)
+        db.session.add(budget)
         db.session.commit()
     except SQLAlchemyError as e:
         print(str(e))
@@ -793,22 +805,22 @@ def updateFund(uid):
     
     return jsonify(message=SUCCEED_MESSAGE), 200
 
-@app.route(FUNDS_ENDPOINT, methods=['DELETE'])
+@app.route(BUDGETS_ENDPOINT, methods=['DELETE'])
 @tokenRequired
-def deleteFund(uid):
+def deleteBudget(uid):
     try:
         data = request.get_json()
-        _fundId = str(data[API_FUND_ID])
+        _budgetId = str(data[API_BUDGET_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    fund = db.session.query(Fund).filter_by(id=_fundId, owner_id=uid).first()
+    budget = db.session.query(Budget).filter_by(id=_budgetId, owner_id=uid).first()
 
-    if (fund is None):
-        return jsonify(message=FUND_DOES_NOT_EXISTS_MESSAGE), 404
+    if (budget is None):
+        return jsonify(message=BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
 
     try:
-        db.session.delete(fund)
+        db.session.delete(budget)
         db.session.commit()
     except SQLAlchemyError as e:
         print(str(e))
@@ -824,15 +836,15 @@ def createTransaction(uid):
     try:
         data = request.get_json()
         amount = int(data[API_AMOUNT])
-        fundId = str(data[API_FUND_ID])
+        budgetId = str(data[API_BUDGET_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    currentFund = db.session.query(Fund).filter_by(id=fundId, owner_id=uid).first()
-    if (currentFund is None):
+    currentBudget = db.session.query(Budget).filter_by(id=budgetId, owner_id=uid).first()
+    if (currentBudget is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
-    transaction = Transaction(fundId, amount)
+    transaction = Transaction(budgetId, amount)
 
     fields = data.keys()
     try:
@@ -844,8 +856,8 @@ def createTransaction(uid):
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     try:
-        currentFund.transactions.append(transaction)
-        db.session.add(currentFund)
+        currentBudget.transactions.append(transaction)
+        db.session.add(currentBudget)
         db.session.commit()
     except SQLAlchemyError as e:
         print(str(e))
@@ -867,8 +879,8 @@ def getTransaction(uid):
     if (transaction is None):
         return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Fund).join(UserAccount.funds).\
-        filter(Fund.id==transaction.fund_id, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(Budget).join(UserAccount.budgets).\
+        filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
     if permissionCheck is None:
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
@@ -887,8 +899,8 @@ def updateTransaction(uid):
     if (transaction is None):
         return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Fund).join(UserAccount.funds).\
-        filter(Fund.id==transaction.fund_id, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(Budget).join(UserAccount.budgets).\
+        filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
     if permissionCheck is None:
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
@@ -929,8 +941,8 @@ def deleteTransaction(uid):
     if (transaction is None):
         return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Fund).join(UserAccount.funds).\
-        filter(Fund.id==transaction.fund_id, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(Budget).join(UserAccount.budgets).\
+        filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
     if permissionCheck is None:
         return jsonify(message=FORBIDDEN_MESSAGE), 403
     
