@@ -1,3 +1,4 @@
+import re
 from sqlalchemy.exc import SQLAlchemyError
 from .utils.cipher import *
 from flask import request, jsonify
@@ -21,18 +22,19 @@ def tokenRequired(func):
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         # parse token => dict of info
-        infoDict = parseToken(token)
-        if infoDict is None:
-            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-
-        # check if account is valid in DB
         try:
-            if not checkAccount(infoDict[API_UID], infoDict[API_HASH]):
+            tokenDict = decode(token)
+            if tokenDict[ISSUER_KEY] != YELL_ISSUER:
                 return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+            if (tokenDict[API_TOKEN_TYPE]!=ACCESS_TOKEN_TYPE):
+                return jsonify(message=ACCESS_TOKEN_REQUIRED_MESSAGE), 403
+
+        except jwt.ExpiredSignatureError:
+            return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
         except Exception:
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-
-        return func(*args, **kwargs, uid=infoDict[API_UID])
+        
+        return func(*args, **kwargs, uid=tokenDict[API_UID])
     return tokenCheck
 
 @app.route('/')
@@ -43,19 +45,55 @@ def homepage():
 def getToken():
     try:
         data = request.get_json()
-        _uid = data[API_UID]
-        _hash = data[API_HASH]
+        _uid = str(data[API_UID])
+        _hash = str(data[API_HASH]).lower()
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
+    if (not re.fullmatch(REGEX_UID, _uid)):
+        return jsonify(message=INVALID_UID_MESSAGE), 400
+    if (not re.fullmatch(REGEX_HASH, _hash)):
+        return jsonify(message=INVALID_HASH_MESSAGE), 400
+
     try:
         if checkAccount(_uid, _hash):
-            _tokenDict = {API_UID: _uid, API_HASH: _hash}
-            return jsonify(token=generateToken(_tokenDict).decode('UTF-8'))
+            _accessTokenDict = {API_UID: _uid, API_TOKEN_TYPE: ACCESS_TOKEN_TYPE}
+            _refreshTokenDict = {API_UID: _uid, API_TOKEN_TYPE: REFRESH_TOKEN_TYPE}
+            return jsonify(
+                        access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME),
+                        refresh_token=encode(_refreshTokenDict)
+                        ), 200
         return jsonify(message=INACTIVATED_ACCOUNT_MESSAGE), 401
     except Exception:
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
+@app.route(AUTH_ENDPOINT, methods=['GET'])
+def refreshToken():
+    try:
+        token = request.headers['Authorization']
+    except Exception:
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+
+    schema, token = token.split(maxsplit=1)
+    if schema!='Bearer':
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+
+    # parse token => dict of info
+    try:
+        tokenDict = decode(token)
+        if tokenDict[ISSUER_KEY] != YELL_ISSUER:
+            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+        if (tokenDict[API_TOKEN_TYPE]!=REFRESH_TOKEN_TYPE):
+            return jsonify(message=REFRESH_TOKEN_REQUIRED_MESSAGE), 403
+        
+        _accessTokenDict = {API_UID: tokenDict[API_UID], API_TOKEN_TYPE: ACCESS_TOKEN_TYPE}
+        return jsonify(access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME))
+
+    except jwt.ExpiredSignatureError:
+        return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
+    except Exception:
+        return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+    
 @app.route(AUTHORIZED_TEST_ENDPOINT, methods=['POST'])
 @tokenRequired
 def authorized(uid):
@@ -69,7 +107,7 @@ def verifyAccount(token):
     try:
         tokenDict = decode(token)
     except jwt.ExpiredSignatureError:
-        return jsonify(message=EXPIRED_TOKEN_MESSAGE)
+        return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
 
     try:
         result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
@@ -84,12 +122,19 @@ def verifyAccount(token):
 def createAccount():
     try:
         data = request.get_json()
-        _uid = data[API_UID]
-        _email = data[API_EMAIL]
-        _hash = data[API_HASH]
-        _name = data[API_NAME]
+        _uid = str(data[API_UID])
+        _email = str(data[API_EMAIL])
+        _hash = str(data[API_HASH]).lower()
+        _name = str(data[API_NAME])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    if (not re.fullmatch(REGEX_UID, _uid)):
+        return jsonify(message=INVALID_UID_MESSAGE), 400
+    if (not re.fullmatch(REGEX_EMAIL, _email)):
+        return jsonify(message=INVALID_EMAIL_MESSAGE), 400
+    if (not re.fullmatch(REGEX_HASH, _hash)):
+        return jsonify(message=INVALID_HASH_MESSAGE), 400
 
     user = UserAccount(_uid, _email, _name, _hash)
     db.session.add(user)
@@ -104,9 +149,76 @@ def createAccount():
 
     sendVerificationEmail(_email, encode({API_UID: _uid, API_EMAIL: _email}, EMAIL_VERIFICATION_TIME), _name)
 
-    token = generateToken({API_UID: _uid, API_HASH: _hash}).decode('UTF-8')
+    return jsonify(message=PENDING_VERIFICATION_MESSAGE), 200
 
-    return jsonify(message=PENDING_VERIFICATION_MESSAGE, token = token), 201
+@app.route(USERS_ENDPOINT, methods=['PATCH'])
+@tokenRequired
+def updateAccount(uid):
+    try:
+        data = request.get_json()
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    fields = data.keys()
+    
+    if (not re.fullmatch(REGEX_UID, uid)):
+            return jsonify(message=INVALID_UID_MESSAGE), 400
+    user = db.session.query(UserAccount).filter_by(id=uid).first()
+    if (user is None):
+        return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
+
+    emailChanged = False
+    try:
+        if (API_EMAIL in fields):
+            user.email = str(data[API_EMAIL])
+            if (not re.fullmatch(REGEX_EMAIL, user.email)):
+                return jsonify(message=INVALID_EMAIL_MESSAGE), 400
+            user.confirmed = False
+            emailChanged = True
+        if (API_NAME in fields):
+            user.name = str(data[API_NAME])
+        if (API_HASH in fields):
+            user.hash = str(data[API_HASH])
+            if (not re.fullmatch(REGEX_HASH, user.hash)):
+                return jsonify(message=INVALID_HASH_MESSAGE), 400
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    try:
+        user.updated_at = datetime.utcnow()
+        db.session.add(user)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(str(e))
+        sys.stdout.flush()
+        return jsonify(message=FAILED_MESSAGE), 400
+
+    if emailChanged:
+        sendVerificationEmail(user.email, encode({API_UID: uid, API_EMAIL: user.email}, EMAIL_VERIFICATION_TIME), user.name)
+        return jsonify(message=PENDING_VERIFICATION_MESSAGE), 200
+
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(USERS_ENDPOINT, methods=['DELETE'])
+@tokenRequired
+def deleteAccount(uid):
+    if (not re.fullmatch(REGEX_UID, uid)):
+            return jsonify(message=INVALID_UID_MESSAGE), 400
+    user = db.session.query(UserAccount).filter_by(id=uid).first()
+    if (user is None):
+        return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(str(e))
+        sys.stdout.flush()
+        return jsonify(message=FAILED_MESSAGE), 400
+
+    return jsonify(message=SUCCEED_MESSAGE), 200
 
 @app.route(USERS_CHECK_ENDPOINT, methods=['GET'])
 def checkAvailability():
@@ -134,14 +246,15 @@ def checkAvailability():
 def createDashboard(uid):
     try:
         data = request.get_json()
-        _name = data[API_NAME]
+        _name = str(data[API_NAME])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     dashboard = Dashboard(_name)
-    
+    permission = DashboardPermission(dashboard, ADMIN_ROLE)
+
     currentUser = db.session.query(UserAccount).filter_by(id=uid).first()
-    currentUser.dashboards.append(dashboard)
+    currentUser.dashboards.append(permission)
 
     try:
         db.session.add(currentUser)
@@ -157,30 +270,51 @@ def createDashboard(uid):
 def createTask(uid):
     try:
         data = request.get_json()
-        _name = data[API_NAME]
-        _dashboardId = data[API_DASHBOARD_ID]
+        _name = str(data[API_NAME])
+        _dashboardId = str(data[API_DASHBOARD_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    currentDashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    currentDashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (currentDashboard is None):
         return jsonify(message=INVALID_DASHBOARD_MESSAGE), 403
 
     task = Task(_name,
-                _dashboardId,
-                data.get(API_STATUS), 
-                data.get(API_NOTI_LEVEL), 
-                data.get(API_PRIORITY),
-                data.get(API_PARENT_ID),
-                data.get(API_START_TIME),
-                data.get(API_END_TIME),
-                data.get(API_LABELS))
+                _dashboardId)
     
-    currentDashboard.tasks.append(task)
+    fields = data.keys()
+    try:
+        if (API_STATUS in fields):
+            task.status = int(data[API_STATUS])
+        if (API_NOTI_LEVEL in fields):
+            task.notification_level = int(data[API_NOTI_LEVEL])
+        if (API_PRIORITY in fields):
+            task.priority = int(data[API_PRIORITY])
+        if (API_PARENT_ID in fields):
+            task.parent_id = str(data[API_PARENT_ID])
+        if (API_START_TIME in fields):
+            task.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
+        if (API_END_TIME in fields):
+            task.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
+        if (API_LABELS in fields):
+            task.labels = str(data[API_LABELS])
+        if (API_CONTENT in fields):
+            task.content = str(data[API_CONTENT])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     try:
+        currentDashboard.tasks.append(task)
         db.session.add(currentDashboard)
         db.session.commit()
     except SQLAlchemyError:
@@ -196,7 +330,7 @@ def createTask(uid):
 def updateTask(uid):
     try:
         data = request.get_json()
-        _taskId = data[API_TASK_ID]
+        _taskId = str(data[API_TASK_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -205,31 +339,48 @@ def updateTask(uid):
     if (task is None):
         return jsonify(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Dashboard).join(UserAccount.dashboards). \
-        filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=task.dashboard_id).first()
     
     if (permissionCheck is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
+    if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
     fields = data.keys()
-    if API_NAME in fields:
-        task.name = data[API_NAME]
-    if API_STATUS in fields:
-        task.status = data[API_STATUS]
-    if API_NOTI_LEVEL in fields:
-        task.notification_level = data[API_NOTI_LEVEL]
-    if API_PRIORITY in fields:
-        task.priority = data[API_PRIORITY]
-    if API_PARENT_ID in fields:
-        task.parent_id = data[API_PARENT_ID]
-    if API_START_TIME in fields:
-        task.start_time = data[API_START_TIME]
-    if API_END_TIME in fields:
-        task.end_time = data[API_END_TIME]
-    if API_LABELS in fields:
-        task.labels = data[API_LABELS]
-    if API_DASHBOARD_ID in fields:
-        task.dashboard_id = data[API_DASHBOARD_ID]
+
+    try:
+        if API_NAME in fields:
+            task.name = str(data[API_NAME])
+        if API_STATUS in fields:
+            task.status = int(data[API_STATUS])
+        if API_NOTI_LEVEL in fields:
+            task.notification_level = int(data[API_NOTI_LEVEL])
+        if API_PRIORITY in fields:
+            task.priority = int(data[API_PRIORITY])
+        if API_PARENT_ID in fields:
+            task.parent_id = str(data[API_PARENT_ID])
+        if API_START_TIME in fields:
+            task.start_time = datetime.fromisoformat(data[API_START_TIME])
+        if API_END_TIME in fields:
+            task.end_time = datetime.fromisoformat(data[API_END_TIME])
+        if API_LABELS in fields:
+            task.labels = str(data[API_LABELS])
+        if API_CONTENT in fields:
+            task.content = str(data[API_CONTENT])
+        if API_DASHBOARD_ID in fields:
+            permissionCheck = db.session.query(DashboardPermission). \
+                filter_by(user_id=uid, dashboard_id=data[API_DASHBOARD_ID]).first()
+
+            if (permissionCheck is None):
+                return jsonify(message=FORBIDDEN_MESSAGE), 403
+            if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+                return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+            task.dashboard_id = str(data[API_DASHBOARD_ID])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     task.updated_at = datetime.utcnow()
 
@@ -266,12 +417,20 @@ def getUserProfile(uid):
 @tokenRequired
 def getDashboard(uid):
     try:
-        dashboard_id = request.args[API_DASHBOARD_ID]
+        dashboard_id = str(request.args[API_DASHBOARD_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-        filter(UserAccount.id==uid, Dashboard.id==dashboard_id).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=dashboard_id).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (VIEW_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    dashboard = db.session.query(Dashboard).filter_by(id=dashboard_id).first()
 
     if dashboard is None:
         return jsonify(message=DASHBOARD_DOES_NOT_EXISTS_MESSAGE), 404
@@ -294,8 +453,16 @@ def updateDashboard(uid):
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 400
@@ -303,7 +470,7 @@ def updateDashboard(uid):
     fields = data.keys()
     
     if API_NAME in fields:
-        dashboard.name = data[API_NAME]
+        dashboard.name = str(data[API_NAME])
     
     dashboard.updated_at = datetime.utcnow()
 
@@ -323,13 +490,40 @@ def updateDashboard(uid):
 def grantDashboardPermission(uid):
     try:
         data = request.get_json()
-        _dashboardId = data[API_DASHBOARD_ID]
-        _targetUserId = data[API_UID]
+        _dashboardId = str(data[API_DASHBOARD_ID])
+        _targetUserId = str(data[API_UID])
+        _role = str(data[API_ROLE])
+        if _role not in DASHBOARD_ROLES:
+            raise Exception()
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (INVITE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+    
+    alreadyConfirmed = db.session.query(DashboardPermission).filter_by(dashboard_id=_dashboardId, user_id=_targetUserId).first()
+
+    # Already have permission in this dashboard
+    if (alreadyConfirmed is not None):
+        alreadyConfirmed.role = _role
+        alreadyConfirmed.updated_at = datetime.utcnow()
+        try:
+            db.session.add(alreadyConfirmed)
+            db.session.commit()
+        except SQLAlchemyError as e:
+            print(str(e))
+            sys.stdout.flush()
+            db.session.rollback()
+            return jsonify(message=FAILED_MESSAGE), 400
+        return jsonify(message=SUCCEED_MESSAGE), 200
+
+    dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 400
@@ -340,8 +534,9 @@ def grantDashboardPermission(uid):
         return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
 
     sendDashboardInvitation(encode({API_UID: _targetUserId, 
-                                    API_DASHBOARD_ID: str(dashboard.id), 
-                                    API_INVITED_BY: uid}), 
+                                    API_DASHBOARD_ID: _dashboardId, 
+                                    API_INVITED_BY: uid,
+                                    API_ROLE: _role}), 
                             targetUser.email, targetUser.name, dashboard.name)
     return jsonify(message=INVITATION_SENT_MESSAGE), 200
 
@@ -350,23 +545,32 @@ def grantDashboardPermission(uid):
 def removeDashboardPermission(uid):
     try:
         data = request.get_json()
-        _dashboardId = data[API_DASHBOARD_ID]
-        _targetUserId = data[API_UID]
+        _dashboardId = str(data[API_DASHBOARD_ID])
+        _targetUserId = str(data[API_UID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
 
-    if (dashboard is None):
-        return jsonify(message=FORBIDDEN_MESSAGE), 400
+    if (INVITE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+    
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=_targetUserId, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     targetUser = db.session.query(UserAccount).filter_by(id=_targetUserId).first()
 
     if (targetUser is None):
         return jsonify(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
     
-    targetUser.dashboards.remove(dashboard)
+    targetUser.dashboards.remove(permissionCheck)
 
     try:
         db.session.add(targetUser)
@@ -387,19 +591,23 @@ def confirmDashboardInvitation(token):
     try:
         tokenDict = decode(token)
     except jwt.ExpiredSignatureError:
-        return jsonify(message=EXPIRED_TOKEN_MESSAGE)
+        return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
 
     try:
         dashboard = db.session.query(Dashboard).filter_by(id=tokenDict[API_DASHBOARD_ID]).first()
         user = db.session.query(UserAccount).filter_by(id=tokenDict[API_UID]).first()
-        user.dashboards.append(dashboard)
-    except Exception:
+        permission = DashboardPermission(dashboard, tokenDict[API_ROLE])
+        permission.user_id = tokenDict[API_UID]
+        user.dashboards.append(permission)
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
     try:
         db.session.add(user)
         db.session.commit()
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
@@ -412,12 +620,20 @@ def confirmDashboardInvitation(token):
 def deleteDashboard(uid):
     try:
         data = request.get_json()
-        _dashboardId = data[API_DASHBOARD_ID]
+        _dashboardId = str(data[API_DASHBOARD_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    dashboard = db.session.query(Dashboard).join(UserAccount.dashboards). \
-                    filter(Dashboard.id==_dashboardId, UserAccount.id==uid).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
+    
+    if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (DELETE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+    
+    dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):
         return jsonify(message=FORBIDDEN_MESSAGE), 400
@@ -437,7 +653,7 @@ def deleteDashboard(uid):
 @tokenRequired
 def getTask(uid):
     try:
-        _taskId = request.args[API_TASK_ID]
+        _taskId = str(request.args[API_TASK_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -446,10 +662,13 @@ def getTask(uid):
     if (task is None):
         return jsonify(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Dashboard).join(UserAccount.dashboards). \
-        filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=task.dashboard_id).first()
     
     if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (VIEW_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     return jsonify(task.dict()), 200
@@ -459,7 +678,7 @@ def getTask(uid):
 def deleteTask(uid):
     try:
         data = request.get_json()
-        _taskId = data[API_TASK_ID]
+        _taskId = str(data[API_TASK_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
@@ -468,10 +687,13 @@ def deleteTask(uid):
     if (task is None):
         return jsonify(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Dashboard).join(UserAccount.dashboards). \
-        filter(UserAccount.id==uid, Dashboard.id==task.dashboard_id).first()
+    permissionCheck = db.session.query(DashboardPermission). \
+        filter_by(user_id=uid, dashboard_id=task.dashboard_id).first()
     
     if (permissionCheck is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     try:
@@ -485,25 +707,34 @@ def deleteTask(uid):
 
     return jsonify(message=SUCCEED_MESSAGE), 200
 
-@app.route(FUNDS_ENDPOINT, methods=['POST'])
+@app.route(BUDGETS_ENDPOINT, methods=['POST'])
 @tokenRequired
-def createFund(uid):
+def createBudget(uid):
     try:
         data = request.get_json()
-        name = data[API_NAME]
-        balance = data[API_BALANCE]
+        name = str(data[API_NAME])
+        balance = int(data[API_BALANCE])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    fund = Fund(uid, 
+    budget = Budget(uid, 
                 name, 
-                balance, 
-                data.get(API_START_TIME), 
-                data.get(API_END_TIME), 
-                data.get(API_THRESHOLD))
+                balance)
     
+    fields = data.keys()
+
     try:
-        db.session.add(fund)
+        if (API_START_TIME in fields):
+            budget.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
+        if (API_END_TIME in fields):
+            budget.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
+        if (API_THRESHOLD in fields):
+            budget.threshold = datetime.fromisoformat(str(data[API_THRESHOLD]))
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    try:
+        db.session.add(budget)
         db.session.commit()
     except SQLAlchemyError as e:
         print(str(e))
@@ -511,56 +742,62 @@ def createFund(uid):
         db.session.rollback()
         return jsonify(message=FAILED_MESSAGE), 400
     
-    return jsonify(message=SUCCEED_MESSAGE, fund_id=fund.id), 200
+    return jsonify(message=SUCCEED_MESSAGE, budget_id=budget.id), 200
 
-@app.route(FUNDS_ENDPOINT, methods=['GET'])
+@app.route(BUDGETS_ENDPOINT, methods=['GET'])
 @tokenRequired
-def getFund(uid):
+def getBudget(uid):
     try:
-        _fundId = request.args[API_FUND_ID]
+        _budgetId = str(request.args[API_BUDGET_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    fund = db.session.query(Fund).filter_by(owner_id=uid, id=_fundId).first()
+    budget = db.session.query(Budget).filter_by(owner_id=uid, id=_budgetId).first()
 
-    if fund is None:
-        return jsonify(message=FUND_DOES_NOT_EXISTS_MESSAGE), 404
+    if budget is None:
+        return jsonify(message=BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
 
     fetchType = request.args.get(API_FETCH)
     if (fetchType==API_FULL):
-        return jsonify(fund.dict()), 200
+        return jsonify(budget.dict()), 200
     elif (fetchType==API_COMPACT):
-        return jsonify(fund.compactDict()), 200
+        return jsonify(budget.compactDict()), 200
     else:
-        return jsonify(fund.compactDict()), 200
+        return jsonify(budget.compactDict()), 200
 
-@app.route(FUNDS_ENDPOINT, methods=['PATCH'])
+@app.route(BUDGETS_ENDPOINT, methods=['PATCH'])
 @tokenRequired
-def updateFund(uid):
+def updateBudget(uid):
     try:
         data = request.get_json()
-        _fundId = data[API_FUND_ID]
+        _budgetId = str(data[API_BUDGET_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    fund = db.session.query(Fund).filter_by(id=_fundId, owner_id=uid).first()
+    budget = db.session.query(Budget).filter_by(id=_budgetId, owner_id=uid).first()
+    if budget is None:
+        return jsonify(message=BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
 
     fields = data.keys()
-    if API_NAME in fields:
-        fund.name = data[API_NAME]
-    if API_BALANCE in fields:
-        fund.balance = data[API_BALANCE]
-    if API_START_TIME in fields:
-        fund.start_time = data[API_START_TIME]
-    if API_END_TIME in fields:
-        fund.end_time = data[API_END_TIME]
-    if API_THRESHOLD in fields:
-        fund.threshold = data[API_THRESHOLD]
-    
-    fund.updated_at = datetime.utcnow()
 
     try:
-        db.session.add(fund)
+        if API_NAME in fields:
+            budget.name = str(data[API_NAME])
+        if API_BALANCE in fields:
+            budget.balance = int(data[API_BALANCE])
+        if API_START_TIME in fields:
+            budget.start_time = datetime.fromisoformat(data[API_START_TIME])
+        if API_END_TIME in fields:
+            budget.end_time = datetime.fromisoformat(data[API_END_TIME])
+        if API_THRESHOLD in fields:
+            budget.threshold = int(data[API_THRESHOLD])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    budget.updated_at = datetime.utcnow()
+
+    try:
+        db.session.add(budget)
         db.session.commit()
     except SQLAlchemyError as e:
         print(str(e))
@@ -570,22 +807,152 @@ def updateFund(uid):
     
     return jsonify(message=SUCCEED_MESSAGE), 200
 
-@app.route(FUNDS_ENDPOINT, methods=['DELETE'])
+@app.route(BUDGETS_ENDPOINT, methods=['DELETE'])
 @tokenRequired
-def deleteFund(uid):
+def deleteBudget(uid):
     try:
         data = request.get_json()
-        _fundId = data[API_FUND_ID]
+        _budgetId = str(data[API_BUDGET_ID])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
-    fund = db.session.query(Fund).filter_by(id=_fundId, owner_id=uid).first()
+    budget = db.session.query(Budget).filter_by(id=_budgetId, owner_id=uid).first()
 
-    if (fund is None):
-        return jsonify(message=FUND_DOES_NOT_EXISTS_MESSAGE), 404
+    if (budget is None):
+        return jsonify(message=BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
 
     try:
-        db.session.delete(fund)
+        db.session.delete(budget)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(TRANSACTIONS_ENDPOINT, methods=['POST'])
+@tokenRequired
+def createTransaction(uid):
+    try:
+        data = request.get_json()
+        amount = int(data[API_AMOUNT])
+        budgetId = str(data[API_BUDGET_ID])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    currentBudget = db.session.query(Budget).filter_by(id=budgetId, owner_id=uid).first()
+    if (currentBudget is None):
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    transaction = Transaction(budgetId, amount)
+
+    fields = data.keys()
+    try:
+        if (API_PURPOSES in fields):
+            transaction.purposes = str(data[API_PURPOSES])
+        if (API_TIME in fields):
+            transaction.time = datetime.fromisoformat(str(data[API_TIME]))
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+
+    try:
+        currentBudget.balance += amount
+        currentBudget.transactions.append(transaction)
+        db.session.add(currentBudget)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE, transaction_id=transaction.id), 200
+
+@app.route(TRANSACTIONS_ENDPOINT, methods=['GET'])
+@tokenRequired
+def getTransaction(uid):
+    try:
+        transactionId = str(request.args[API_TRANSACTION_ID])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
+    if (transaction is None):
+        return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
+
+    permissionCheck = db.session.query(Budget).join(UserAccount.budgets).\
+        filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
+    if permissionCheck is None:
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    return jsonify(transaction.dict()), 200
+
+@app.route(TRANSACTIONS_ENDPOINT, methods=['PATCH'])
+@tokenRequired
+def updateTransaction(uid):
+    try:
+        data = request.get_json()
+        transactionId = str(data[API_TRANSACTION_ID])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
+    if (transaction is None):
+        return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
+
+    currentBudget = db.session.query(Budget).join(UserAccount.budgets).\
+        filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
+    if currentBudget is None:
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+
+    try:
+        fields = data.keys()
+        if API_PURPOSES in fields:
+            transaction.purposes = str(data[API_PURPOSES])
+        if API_TIME in fields:
+            transaction.time = datetime.fromisoformat(data[API_TIME])
+        if API_AMOUNT in fields:
+            currentBudget.balance += int(data[API_AMOUNT]) - transaction.amount
+            transaction.amount = int(data[API_AMOUNT])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    transaction.updated_at = datetime.utcnow()
+
+    try:
+        db.session.add(transaction)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return jsonify(message=FAILED_MESSAGE), 400
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
+
+@app.route(TRANSACTIONS_ENDPOINT, methods=['DELETE'])
+@tokenRequired
+def deleteTransaction(uid):
+    try:
+        data = request.get_json()
+        transactionId = str(data[API_TRANSACTION_ID])
+    except Exception:
+        return jsonify(message=INVALID_DATA_MESSAGE), 400
+    
+    transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
+    if (transaction is None):
+        return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
+
+    currentBudget = db.session.query(Budget).join(UserAccount.budgets).\
+        filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
+    if currentBudget is None:
+        return jsonify(message=FORBIDDEN_MESSAGE), 403
+    
+    try:
+        currentBudget.balance -= transaction.amount
+        db.session.delete(transaction)
         db.session.commit()
     except SQLAlchemyError as e:
         print(str(e))

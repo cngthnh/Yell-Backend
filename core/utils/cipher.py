@@ -19,7 +19,7 @@ def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
     _dict[ISSUED_AT_KEY] = int(time_now.timestamp())
     _dict[NOT_BEFORE_KEY] = _dict[ISSUED_AT_KEY]
     _dict[EXPIRATION_KEY] = int((time_now + timedelta(minutes = expired)).timestamp())
-    return jwt.encode(_dict, os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS256)
+    return jwt.encode(_dict, os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS384)
 
 def verifyToken(token):
     """
@@ -27,7 +27,7 @@ def verifyToken(token):
     Input: JWT (str)
     Output: boolean
     """
-    key = jwk.construct(os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS256)
+    key = jwk.construct(os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS384)
     if (isinstance(token, str)):
         token = token.encode()
     message, encoded_sig = token.rsplit(b'.', 1)
@@ -69,7 +69,6 @@ def parseToken(token):
     """
     Check if the token is signed and have correct credentials
     Input: JWE (bytes or str)
-    Output: boolean
     """
     try:
         signedToken = decrypt(token)
@@ -78,9 +77,10 @@ def parseToken(token):
 
         tokenDict = decode(signedToken)
         if tokenDict[ISSUER_KEY] != YELL_ISSUER:
-            return None
-
-    except Exception:
+            return False
+    except jwt.ExpiredSignatureError:
         return None
+    except Exception:
+        return False
 
     return tokenDict
