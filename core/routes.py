@@ -775,6 +775,8 @@ def updateBudget(uid):
         return jsonify(message=INVALID_DATA_MESSAGE), 400
     
     budget = db.session.query(Budget).filter_by(id=_budgetId, owner_id=uid).first()
+    if budget is None:
+        return jsonify(message=BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
 
     fields = data.keys()
 
@@ -856,6 +858,7 @@ def createTransaction(uid):
         return jsonify(message=INVALID_DATA_MESSAGE), 400
 
     try:
+        currentBudget.balance += amount
         currentBudget.transactions.append(transaction)
         db.session.add(currentBudget)
         db.session.commit()
@@ -899,9 +902,9 @@ def updateTransaction(uid):
     if (transaction is None):
         return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Budget).join(UserAccount.budgets).\
+    currentBudget = db.session.query(Budget).join(UserAccount.budgets).\
         filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
-    if permissionCheck is None:
+    if currentBudget is None:
         return jsonify(message=FORBIDDEN_MESSAGE), 403
 
     try:
@@ -911,6 +914,7 @@ def updateTransaction(uid):
         if API_TIME in fields:
             transaction.time = datetime.fromisoformat(data[API_TIME])
         if API_AMOUNT in fields:
+            currentBudget.balance += int(data[API_AMOUNT]) - transaction.amount
             transaction.amount = int(data[API_AMOUNT])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
@@ -941,12 +945,13 @@ def deleteTransaction(uid):
     if (transaction is None):
         return jsonify(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
 
-    permissionCheck = db.session.query(Budget).join(UserAccount.budgets).\
+    currentBudget = db.session.query(Budget).join(UserAccount.budgets).\
         filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
-    if permissionCheck is None:
+    if currentBudget is None:
         return jsonify(message=FORBIDDEN_MESSAGE), 403
     
     try:
+        currentBudget.balance -= transaction.amount
         db.session.delete(transaction)
         db.session.commit()
     except SQLAlchemyError as e:
