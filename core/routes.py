@@ -84,12 +84,14 @@ def logout():
             db.session.commit()
         except Exception:
             db.session.rollback()
-        return jsonify(message=INVALID_SESSION_MESSAGE), 403
+            return jsonify(message=INVALID_SESSION_MESSAGE), 403
 
     except jwt.ExpiredSignatureError:
         return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
     except Exception:
         return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+    
+    return jsonify(message=SUCCEED_MESSAGE), 200
 
 @app.route(AUTH_ENDPOINT, methods=['POST'])
 def getToken():
