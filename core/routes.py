@@ -40,9 +40,9 @@ def tokenRequired(func):
                     db.session.delete(session)
                     db.session.commit()
                 except Exception:
-                    print(session.updated_at.timestamp())
-                    sys.stdout.flush()
                     db.session.rollback()
+                print(session.updated_at.timestamp())
+                sys.stdout.flush()
                 return jsonify(message=INVALID_SESSION_MESSAGE), 403
 
         except jwt.ExpiredSignatureError:
