@@ -108,8 +108,6 @@ def getToken():
     try:
         if checkAccount(_uid, _hash):
             session = Session(_uid)
-            _accessTokenDict = {API_TOKEN_TYPE: ACCESS_TOKEN_TYPE, SESSION_ID_KEY: session.id}
-            _refreshTokenDict = {API_TOKEN_TYPE: REFRESH_TOKEN_TYPE, SESSION_ID_KEY: session.id}
 
             iat = datetime.utcnow()
             session.updated_at = iat
@@ -120,6 +118,9 @@ def getToken():
             except Exception:
                 db.session.rollback()
                 return jsonify(message=INVALID_SESSION_MESSAGE), 403
+
+            _accessTokenDict = {API_TOKEN_TYPE: ACCESS_TOKEN_TYPE, SESSION_ID_KEY: session.id}
+            _refreshTokenDict = {API_TOKEN_TYPE: REFRESH_TOKEN_TYPE, SESSION_ID_KEY: session.id}
 
             return jsonify(
                         access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME, iat=iat),
@@ -161,8 +162,6 @@ def refreshToken():
             return jsonify(message=INVALID_SESSION_MESSAGE), 403
 
         iat = datetime.utcnow()
-        _refreshTokenDict = {API_TOKEN_TYPE: REFRESH_TOKEN_TYPE, SESSION_ID_KEY: session.id}
-        _accessTokenDict = {API_TOKEN_TYPE: ACCESS_TOKEN_TYPE, SESSION_ID_KEY: session.id}
         session.updated_at = iat
 
         try:
@@ -171,6 +170,9 @@ def refreshToken():
         except Exception:
             db.session.rollback()
             return jsonify(message=INVALID_SESSION_MESSAGE), 403
+
+        _refreshTokenDict = {API_TOKEN_TYPE: REFRESH_TOKEN_TYPE, SESSION_ID_KEY: session.id}
+        _accessTokenDict = {API_TOKEN_TYPE: ACCESS_TOKEN_TYPE, SESSION_ID_KEY: session.id}
 
         return jsonify(access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME, iat=iat), 
                         refresh_token=encode(_refreshTokenDict, iat=iat)), 200
