@@ -51,11 +51,13 @@ TRANSACTION_DOES_NOT_EXISTS_MESSAGE = 'TRANSACTION_DOES_NOT_EXISTS'
 INVITATION_SENT_MESSAGE = 'INVITATION_SENT'
 ACCESS_TOKEN_REQUIRED_MESSAGE = 'ACCESS_TOKEN_REQUIRED'
 REFRESH_TOKEN_REQUIRED_MESSAGE = 'REFRESH_TOKEN_REQUIRED'
+INVALID_SESSION_MESSAGE = 'INVALID_SESSION'
 
 ## Key names ##
 ISSUER_KEY = 'iss'
 ISSUED_AT_KEY = 'iat'
 EXPIRATION_KEY = 'exp'
+SESSION_ID_KEY = 'session_id'
 NOT_BEFORE_KEY = 'nbf'
 
 ## Definitions for API key names ##
@@ -99,7 +101,7 @@ API_TOKEN_TYPE = 'token_type'
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE
 EMAIL_VRF_ENDPOINT = '/api/users/verify/<token>' # GET
 EMAIL_VRF_SIGNATURE = '/api/users/verify/'
-AUTH_ENDPOINT = '/api/users/auth' # GET, POST
+AUTH_ENDPOINT = '/api/users/auth' # GET, POST, DELETE
 AUTHORIZED_TEST_ENDPOINT = '/api/users/authorized' 
 USERS_CHECK_ENDPOINT = '/api/check' # GET
 TASKS_ENDPOINT = '/api/tasks' # GET, POST, PATCH, DELETE
@@ -113,4 +115,4 @@ TRANSACTIONS_ENDPOINT = '/api/transactions' # GET, POST, PATCH, DELETE
 # regex
 REGEX_EMAIL = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
 REGEX_UID = r'^(?=[a-zA-Z0-9._]{6,64}$)(?!.*[_.]{2})[^_.].*[^_.]$'
-REGEX_HASH = r'[0-9a-fA-F]{64}'
+REGEX_HASH = r'[0-9a-f]{64}'

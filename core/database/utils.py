@@ -3,7 +3,7 @@ from .models import *
 def checkAccount(uid, hash):
     result = db.session.query(UserAccount).filter_by(id = uid, hash = hash).first()
     if (result is None):
-        return False
+        raise ValueError(INVALID_CREDENTIALS_MESSAGE)
     if (result.confirmed == False):
         return False
     return True

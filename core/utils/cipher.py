@@ -8,17 +8,18 @@ from jose.constants import ALGORITHMS
 from .definitions import *
 from datetime import datetime, timedelta
 
-def encode(_dict, expired = DEFAULT_EXPIRATION_TIME):
+def encode(_dict, expired = DEFAULT_EXPIRATION_TIME, iat = None):
     """ 
     Sign the dictionary
     Input: dictionary
     Output: JWT (bytes)
     """
-    time_now = datetime.now()
+    if iat is None:
+        iat = datetime.utcnow()
     _dict[ISSUER_KEY] = YELL_ISSUER
-    _dict[ISSUED_AT_KEY] = int(time_now.timestamp())
+    _dict[ISSUED_AT_KEY] = int(iat.timestamp())
     _dict[NOT_BEFORE_KEY] = _dict[ISSUED_AT_KEY]
-    _dict[EXPIRATION_KEY] = int((time_now + timedelta(minutes = expired)).timestamp())
+    _dict[EXPIRATION_KEY] = int((iat + timedelta(minutes = expired)).timestamp())
     return jwt.encode(_dict, os.environ.get('YELL_SIG_KEY', None), algorithm=ALGORITHMS.HS384)
 
 def verifyToken(token):
