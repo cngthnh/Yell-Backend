@@ -90,7 +90,7 @@ def logout():
         return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
     except Exception:
         return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-        
+
 @app.route(AUTH_ENDPOINT, methods=['POST'])
 def getToken():
     try:
@@ -113,6 +113,13 @@ def getToken():
 
             iat = datetime.utcnow()
             session.updated_at = iat
+
+            try:
+                db.session.add(session)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                return jsonify(message=INVALID_SESSION_MESSAGE), 403
 
             return jsonify(
                         access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME, iat=iat),
