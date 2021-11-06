@@ -119,8 +119,8 @@ def getToken():
                 db.session.rollback()
                 return jsonify(message=INVALID_SESSION_MESSAGE), 403
 
-            _accessTokenDict = {API_TOKEN_TYPE: ACCESS_TOKEN_TYPE, SESSION_ID_KEY: session.id}
-            _refreshTokenDict = {API_TOKEN_TYPE: REFRESH_TOKEN_TYPE, SESSION_ID_KEY: session.id}
+            _accessTokenDict = {API_TOKEN_TYPE: ACCESS_TOKEN_TYPE, SESSION_ID_KEY: str(session.id)}
+            _refreshTokenDict = {API_TOKEN_TYPE: REFRESH_TOKEN_TYPE, SESSION_ID_KEY: str(session.id)}
 
             return jsonify(
                         access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME, iat=iat),
@@ -173,8 +173,8 @@ def refreshToken():
             db.session.rollback()
             return jsonify(message=INVALID_SESSION_MESSAGE), 403
 
-        _refreshTokenDict = {API_TOKEN_TYPE: REFRESH_TOKEN_TYPE, SESSION_ID_KEY: session.id}
-        _accessTokenDict = {API_TOKEN_TYPE: ACCESS_TOKEN_TYPE, SESSION_ID_KEY: session.id}
+        _refreshTokenDict = {API_TOKEN_TYPE: REFRESH_TOKEN_TYPE, SESSION_ID_KEY: str(session.id)}
+        _accessTokenDict = {API_TOKEN_TYPE: ACCESS_TOKEN_TYPE, SESSION_ID_KEY: str(session.id)}
 
         return jsonify(access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME, iat=iat), 
                         refresh_token=encode(_refreshTokenDict, iat=iat)), 200
