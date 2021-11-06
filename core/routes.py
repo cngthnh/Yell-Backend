@@ -127,7 +127,9 @@ def getToken():
                         refresh_token=encode(_refreshTokenDict, iat=iat)
                         ), 200
         return jsonify(message=INACTIVATED_ACCOUNT_MESSAGE), 401
-    except Exception:
+    except Exception as e:
+        print(e)
+        sys.stdout.flush()
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
 @app.route(AUTH_ENDPOINT, methods=['GET'])
