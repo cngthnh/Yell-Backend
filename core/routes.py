@@ -35,7 +35,7 @@ def tokenRequired(func):
             if session is None:
                 return jsonify(message=INVALID_SESSION_MESSAGE), 403
 
-            if (int(session.updated_at.timestamp())>tokenDict[ISSUED_AT_KEY]):
+            if (int(session.updated_at.timestamp())!=tokenDict[ISSUED_AT_KEY]):
                 try:
                     db.session.delete(session)
                     db.session.commit()
@@ -152,7 +152,7 @@ def refreshToken():
         if (session is None):
             return jsonify(message=INVALID_SESSION_MESSAGE), 403
         
-        if (int(session.updated_at.timestamp())>tokenDict[ISSUED_AT_KEY]):
+        if (int(session.updated_at.timestamp())!=tokenDict[ISSUED_AT_KEY]):
             try:
                 db.session.delete(session)
                 db.session.commit()
