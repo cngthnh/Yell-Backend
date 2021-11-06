@@ -40,6 +40,8 @@ def tokenRequired(func):
                     db.session.delete(session)
                     db.session.commit()
                 except Exception:
+                    print(session.updated_at.timestamp())
+                    sys.stdout.flush()
                     db.session.rollback()
                 return jsonify(message=INVALID_SESSION_MESSAGE), 403
 
