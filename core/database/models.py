@@ -75,7 +75,7 @@ class UserAccount(db.Model):
 
 class Session(db.Model):
     __tablename__ = 'session'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -85,7 +85,7 @@ class Session(db.Model):
 
 class Dashboard(db.Model):
     __tablename__ = 'dashboard'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     name = db.Column(db.UnicodeText)
     tasks = db.relationship('Task', lazy=True, backref='dashboard', cascade='all, delete-orphan')
     users = db.relationship('DashboardPermission', back_populates='dashboard', cascade='all, delete-orphan')
@@ -121,7 +121,7 @@ class Dashboard(db.Model):
 
 class Task(db.Model):
     __tablename__ = 'task'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     parent_id = db.Column(UUID(as_uuid=True), db.ForeignKey('task.id'), nullable=True)
     children = db.relationship('Task',
                 backref=db.backref('parent', remote_side=[id]))
@@ -182,7 +182,7 @@ class Task(db.Model):
 
 class Budget(db.Model):
     __tablename__ = 'budget'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     owner_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), nullable=False)
     name = db.Column(db.UnicodeText, nullable=False)
     start_time = db.Column(db.DateTime, nullable=True)
@@ -240,7 +240,7 @@ class Budget(db.Model):
 
 class Transaction(db.Model):
     __tablename__ = 'transaction'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     budget_id = db.Column(UUID(as_uuid=True), db.ForeignKey('budget.id'), nullable=False)
     purposes = db.Column(db.UnicodeText, nullable=True)
     time = db.Column(db.DateTime, nullable=True)
