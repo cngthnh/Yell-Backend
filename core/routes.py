@@ -35,14 +35,12 @@ def tokenRequired(func):
             if session is None:
                 return jsonify(message=INVALID_SESSION_MESSAGE), 403
 
-            if (session.updated_at>datetime.fromtimestamp(tokenDict[ISSUED_AT_KEY])):
+            if (int(session.updated_at.timestamp())>tokenDict[ISSUED_AT_KEY]):
                 try:
                     db.session.delete(session)
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
-                print(session.updated_at.timestamp())
-                sys.stdout.flush()
                 return jsonify(message=INVALID_SESSION_MESSAGE), 403
 
         except jwt.ExpiredSignatureError:
@@ -111,9 +109,6 @@ def getToken():
         if checkAccount(_uid, _hash):
             session = Session(_uid)
 
-            iat = datetime.utcnow()
-            session.updated_at = iat
-
             try:
                 db.session.add(session)
                 db.session.commit()
@@ -125,8 +120,8 @@ def getToken():
             _refreshTokenDict = {API_TOKEN_TYPE: REFRESH_TOKEN_TYPE, SESSION_ID_KEY: str(session.id)}
 
             return jsonify(
-                        access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME, iat=iat),
-                        refresh_token=encode(_refreshTokenDict, iat=iat)
+                        access_token=encode(_accessTokenDict, ACCESS_TOKEN_EXP_TIME, iat=session.updated_at),
+                        refresh_token=encode(_refreshTokenDict, iat=session.updated_at)
                         ), 200
         return jsonify(message=INACTIVATED_ACCOUNT_MESSAGE), 401
     except Exception as e:
@@ -157,7 +152,7 @@ def refreshToken():
         if (session is None):
             return jsonify(message=INVALID_SESSION_MESSAGE), 403
         
-        if (session.updated_at>datetime.fromtimestamp(tokenDict[ISSUED_AT_KEY])):
+        if (int(session.updated_at.timestamp())>tokenDict[ISSUED_AT_KEY]):
             try:
                 db.session.delete(session)
                 db.session.commit()
