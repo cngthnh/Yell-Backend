@@ -98,7 +98,9 @@ def getToken():
         data = request.get_json()
         _uid = str(data[API_UID])
         _hash = str(data[API_HASH]).lower()
-    except Exception:
+    except Exception as e:
+        print(e)
+        sys.stdout.flush()
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
     if (not re.fullmatch(REGEX_UID, _uid)):
