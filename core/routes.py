@@ -100,6 +100,7 @@ def getToken():
         _hash = str(data[API_HASH]).lower()
     except Exception as e:
         print(e)
+        print(data)
         sys.stdout.flush()
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
