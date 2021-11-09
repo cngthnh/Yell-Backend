@@ -15,11 +15,10 @@ def tokenRequired(func):
     def tokenCheck(*args, **kwargs):
         try:
             token = request.headers['Authorization']
+            schema, token = token.split(maxsplit=1)
+            if schema!='Bearer':
+                return jsonify(message=INVALID_TOKEN_MESSAGE), 403
         except Exception:
-            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-
-        schema, token = token.split(maxsplit=1)
-        if schema!='Bearer':
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
 
         # parse token => dict of info
