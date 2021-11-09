@@ -267,15 +267,15 @@ def updateAccount(uid):
 
     emailChanged = False
     try:
-        if (API_EMAIL in fields):
+        if (API_EMAIL in fields and data[API_EMAIL] is not None):
             user.email = str(data[API_EMAIL])
             if (not re.fullmatch(REGEX_EMAIL, user.email)):
                 return jsonify(message=INVALID_EMAIL_MESSAGE), 400
             user.confirmed = False
             emailChanged = True
-        if (API_NAME in fields):
+        if (API_NAME in fields and data[API_NAME] is not None):
             user.name = str(data[API_NAME])
-        if (API_HASH in fields):
+        if (API_HASH in fields and data[API_HASH] is not None):
             user.hash = str(data[API_HASH])
             if (not re.fullmatch(REGEX_HASH, user.hash)):
                 return jsonify(message=INVALID_HASH_MESSAGE), 400
@@ -392,21 +392,21 @@ def createTask(uid):
     
     fields = data.keys()
     try:
-        if (API_STATUS in fields):
+        if (API_STATUS in fields and data[API_STATUS] is not None):
             task.status = int(data[API_STATUS])
-        if (API_NOTI_LEVEL in fields):
+        if (API_NOTI_LEVEL in fields and data[API_NOTI_LEVEL] is not None):
             task.notification_level = int(data[API_NOTI_LEVEL])
-        if (API_PRIORITY in fields):
+        if (API_PRIORITY in fields and data[API_PRIORITY] is not None):
             task.priority = int(data[API_PRIORITY])
-        if (API_PARENT_ID in fields):
+        if (API_PARENT_ID in fields and data[API_PARENT_ID] is not None):
             task.parent_id = str(data[API_PARENT_ID])
-        if (API_START_TIME in fields):
+        if (API_START_TIME in fields and data[API_START_TIME] is not None):
             task.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
-        if (API_END_TIME in fields):
+        if (API_END_TIME in fields and data[API_END_TIME] is not None):
             task.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
-        if (API_LABELS in fields):
+        if (API_LABELS in fields and data[API_LABELS] is not None):
             task.labels = str(data[API_LABELS])
-        if (API_CONTENT in fields):
+        if (API_CONTENT in fields and data[API_CONTENT] is not None):
             task.content = str(data[API_CONTENT])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
@@ -449,25 +449,25 @@ def updateTask(uid):
     fields = data.keys()
 
     try:
-        if API_NAME in fields:
+        if API_NAME in fields and data[API_NAME] is not None:
             task.name = str(data[API_NAME])
-        if API_STATUS in fields:
+        if API_STATUS in fields and data[API_STATUS] is not None:
             task.status = int(data[API_STATUS])
-        if API_NOTI_LEVEL in fields:
+        if API_NOTI_LEVEL in fields and data[API_NOTI_LEVEL] is not None:
             task.notification_level = int(data[API_NOTI_LEVEL])
-        if API_PRIORITY in fields:
+        if API_PRIORITY in fields and data[API_PRIORITY] is not None:
             task.priority = int(data[API_PRIORITY])
-        if API_PARENT_ID in fields:
+        if API_PARENT_ID in fields and data[API_PARENT_ID] is not None:
             task.parent_id = str(data[API_PARENT_ID])
-        if API_START_TIME in fields:
+        if API_START_TIME in fields and data[API_START_TIME] is not None:
             task.start_time = datetime.fromisoformat(data[API_START_TIME])
-        if API_END_TIME in fields:
+        if API_END_TIME in fields and data[API_END_TIME] is not None:
             task.end_time = datetime.fromisoformat(data[API_END_TIME])
-        if API_LABELS in fields:
+        if API_LABELS in fields and data[API_LABELS] is not None:
             task.labels = str(data[API_LABELS])
-        if API_CONTENT in fields:
+        if API_CONTENT in fields and data[API_CONTENT] is not None:
             task.content = str(data[API_CONTENT])
-        if API_DASHBOARD_ID in fields:
+        if API_DASHBOARD_ID in fields and data[API_DASHBOARD_ID] is not None:
             permissionCheck = db.session.query(DashboardPermission). \
                 filter_by(user_id=uid, dashboard_id=data[API_DASHBOARD_ID]).first()
 
@@ -567,7 +567,7 @@ def updateDashboard(uid):
     
     fields = data.keys()
     
-    if API_NAME in fields:
+    if API_NAME in fields and data[API_NAME] is not None:
         dashboard.name = str(data[API_NAME])
     
     dashboard.updated_at = datetime.utcnow()
@@ -822,11 +822,11 @@ def createBudget(uid):
     fields = data.keys()
 
     try:
-        if (API_START_TIME in fields):
+        if (API_START_TIME in fields and data[API_START_TIME] is not None):
             budget.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
-        if (API_END_TIME in fields):
+        if (API_END_TIME in fields and data[API_END_TIME] is not None):
             budget.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
-        if (API_THRESHOLD in fields):
+        if (API_THRESHOLD in fields and data[API_THRESHOLD] is not None):
             budget.threshold = datetime.fromisoformat(str(data[API_THRESHOLD]))
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
@@ -879,15 +879,15 @@ def updateBudget(uid):
     fields = data.keys()
 
     try:
-        if API_NAME in fields:
+        if API_NAME in fields and data[API_NAME] is not None:
             budget.name = str(data[API_NAME])
-        if API_BALANCE in fields:
+        if API_BALANCE in fields and data[API_BALANCE] is not None:
             budget.balance = int(data[API_BALANCE])
-        if API_START_TIME in fields:
+        if API_START_TIME in fields and data[API_START_TIME] is not None:
             budget.start_time = datetime.fromisoformat(data[API_START_TIME])
-        if API_END_TIME in fields:
+        if API_END_TIME in fields and data[API_END_TIME] is not None:
             budget.end_time = datetime.fromisoformat(data[API_END_TIME])
-        if API_THRESHOLD in fields:
+        if API_THRESHOLD in fields and data[API_THRESHOLD] is not None:
             budget.threshold = int(data[API_THRESHOLD])
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
@@ -948,9 +948,9 @@ def createTransaction(uid):
 
     fields = data.keys()
     try:
-        if (API_PURPOSES in fields):
+        if (API_PURPOSES in fields and data[API_PURPOSES] is not None):
             transaction.purposes = str(data[API_PURPOSES])
-        if (API_TIME in fields):
+        if (API_TIME in fields and data[API_TIME] is not None):
             transaction.time = datetime.fromisoformat(str(data[API_TIME]))
     except Exception:
         return jsonify(message=INVALID_DATA_MESSAGE), 400
@@ -1007,11 +1007,11 @@ def updateTransaction(uid):
 
     try:
         fields = data.keys()
-        if API_PURPOSES in fields:
+        if API_PURPOSES in fields and data[API_PURPOSES] is not None:
             transaction.purposes = str(data[API_PURPOSES])
-        if API_TIME in fields:
+        if API_TIME in fields and data[API_TIME] is not None:
             transaction.time = datetime.fromisoformat(data[API_TIME])
-        if API_AMOUNT in fields:
+        if API_AMOUNT in fields and data[API_AMOUNT] is not None:
             currentBudget.balance += int(data[API_AMOUNT]) - transaction.amount
             transaction.amount = int(data[API_AMOUNT])
     except Exception:
