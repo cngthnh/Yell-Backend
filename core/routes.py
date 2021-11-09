@@ -1,5 +1,4 @@
 import re
-from flask.globals import session
 from sqlalchemy.exc import SQLAlchemyError
 from .utils.cipher import *
 from flask import request, jsonify
