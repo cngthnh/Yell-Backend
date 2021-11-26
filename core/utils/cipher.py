@@ -35,12 +35,12 @@ def verifyToken(token):
     decoded_sig = base64url_decode(encoded_sig)
     return key.verify(message, decoded_sig)
 
-def decode(token):
+def decode(token, options = None):
     """ 
     Input: JWT (bytes or str)
     Output: dictionary
     """
-    return jwt.decode(token, os.environ.get('YELL_SIG_KEY', None))
+    return jwt.decode(token, os.environ.get('YELL_SIG_KEY', None), options=options)
 
 def encrypt(token):
     """

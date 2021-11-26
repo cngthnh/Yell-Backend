@@ -25,9 +25,6 @@ def tokenRequired(func):
             if (tokenDict[API_TOKEN_TYPE]!=ACCESS_TOKEN_TYPE):
                 return jsonify(message=ACCESS_TOKEN_REQUIRED_MESSAGE), 403
 
-            print(tokenDict)
-            sys.stdout.flush()
-
             session = db.session.query(Session).filter_by(id=tokenDict[SESSION_ID_KEY]).first()
 
             if session is None:
@@ -176,6 +173,13 @@ def refreshToken():
                         refresh_token=encode(_refreshTokenDict, iat=iat)), 200
 
     except jwt.ExpiredSignatureError:
+        tokenDict = decode(token, options={'verify_exp': False})
+
+        if tokenDict[ISSUER_KEY] != YELL_ISSUER:
+            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
+        if (tokenDict[API_TOKEN_TYPE]!=REFRESH_TOKEN_TYPE):
+            return jsonify(message=REFRESH_TOKEN_REQUIRED_MESSAGE), 403
+
         session = db.session.query(Session).filter_by(id=tokenDict[SESSION_ID_KEY]).first()
         if (session is not None):
             try:
