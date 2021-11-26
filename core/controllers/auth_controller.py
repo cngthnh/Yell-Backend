@@ -25,6 +25,9 @@ def tokenRequired(func):
             if (tokenDict[API_TOKEN_TYPE]!=ACCESS_TOKEN_TYPE):
                 return jsonify(message=ACCESS_TOKEN_REQUIRED_MESSAGE), 403
 
+            print(tokenDict)
+            sys.stdout.flush()
+
             session = db.session.query(Session).filter_by(id=tokenDict[SESSION_ID_KEY]).first()
 
             if session is None:
