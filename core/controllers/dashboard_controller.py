@@ -29,7 +29,7 @@ def createDashboard(uid):
         db.session.rollback()
         return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(message=SUCCEED_MESSAGE, dashboard_id=dashboard.id), 201
+    return getMessage(message=SUCCEED_MESSAGE, dashboard_id=str(dashboard.id)), 201
 
 @tokenRequired
 def getDashboard(uid):

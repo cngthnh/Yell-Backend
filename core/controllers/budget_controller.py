@@ -41,7 +41,7 @@ def createBudget(uid):
         db.session.rollback()
         return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(message=SUCCEED_MESSAGE, budget_id=budget.id), 200
+    return getMessage(message=SUCCEED_MESSAGE, budget_id=str(budget.id)), 200
 
 @tokenRequired
 def getBudget(uid):

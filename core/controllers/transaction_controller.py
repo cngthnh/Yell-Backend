@@ -42,7 +42,7 @@ def createTransaction(uid):
         db.session.rollback()
         return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(message=SUCCEED_MESSAGE, transaction_id=transaction.id), 200
+    return getMessage(message=SUCCEED_MESSAGE, transaction_id=str(transaction.id)), 200
 
 @tokenRequired
 def getTransaction(uid):

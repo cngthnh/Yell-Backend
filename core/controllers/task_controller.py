@@ -65,7 +65,7 @@ def createTask(uid):
         db.session.rollback()
         return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(message=SUCCEED_MESSAGE, task_id=task.id), 201
+    return getMessage(message=SUCCEED_MESSAGE, task_id=str(task.id)), 201
 
 @tokenRequired
 def updateTask(uid):
