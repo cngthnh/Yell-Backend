@@ -4,7 +4,7 @@ from ..models.models import UserAccount
 from ..utils.cipher import *
 from ..utils.email import *
 from ..models.utils import *
-from auth_controller import tokenRequired
+from .auth_controller import tokenRequired
 import re
 
 def verifyAccount(token):
