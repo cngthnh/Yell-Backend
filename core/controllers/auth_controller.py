@@ -46,6 +46,6 @@ def tokenRequired(func):
     return tokenCheck
 
 
-
+@tokenRequired
 def authorized(uid):
     return jsonify(message='AUTHORIZED'), 200
