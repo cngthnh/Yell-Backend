@@ -15,21 +15,21 @@ def createTask(uid):
         _name = str(data[API_NAME])
         _dashboardId = str(data[API_DASHBOARD_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     permissionCheck = db.session.query(DashboardPermission). \
         filter_by(user_id=uid, dashboard_id=_dashboardId).first()
     
     if (permissionCheck is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     currentDashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (currentDashboard is None):
-        return getMessage(INVALID_DASHBOARD_MESSAGE), 403
+        return getMessage(message=INVALID_DASHBOARD_MESSAGE), 403
 
     task = Task(_name,
                 _dashboardId)
@@ -53,7 +53,7 @@ def createTask(uid):
         if (API_CONTENT in fields and data[API_CONTENT] is not None):
             task.content = str(data[API_CONTENT])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     try:
         currentDashboard.tasks.append(task)
@@ -63,9 +63,9 @@ def createTask(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE, task_id=task.id), 201
+    return getMessage(message=SUCCEED_MESSAGE, task_id=task.id), 201
 
 @tokenRequired
 def updateTask(uid):
@@ -73,21 +73,21 @@ def updateTask(uid):
         data = request.get_json()
         _taskId = str(data[API_TASK_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     task = db.session.query(Task).filter(Task.id==_taskId).first()
 
     if (task is None):
-        return getMessage(TASK_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
 
     permissionCheck = db.session.query(DashboardPermission). \
         filter_by(user_id=uid, dashboard_id=task.dashboard_id).first()
     
     if (permissionCheck is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     fields = data.keys()
 
@@ -115,13 +115,13 @@ def updateTask(uid):
                 filter_by(user_id=uid, dashboard_id=data[API_DASHBOARD_ID]).first()
 
             if (permissionCheck is None):
-                return getMessage(FORBIDDEN_MESSAGE), 403
+                return getMessage(message=FORBIDDEN_MESSAGE), 403
             if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-                return getMessage(FORBIDDEN_MESSAGE), 403
+                return getMessage(message=FORBIDDEN_MESSAGE), 403
 
             task.dashboard_id = str(data[API_DASHBOARD_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     task.updated_at = datetime.utcnow()
 
@@ -132,30 +132,30 @@ def updateTask(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE), 200
+    return getMessage(message=SUCCEED_MESSAGE), 200
 
 @tokenRequired
 def getTask(uid):
     try:
         _taskId = str(request.args[API_TASK_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     task = db.session.query(Task).filter(Task.id==_taskId).first()
 
     if (task is None):
-        return getMessage(TASK_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
 
     permissionCheck = db.session.query(DashboardPermission). \
         filter_by(user_id=uid, dashboard_id=task.dashboard_id).first()
     
     if (permissionCheck is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     if (VIEW_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     return genTaskInfo(task.dict()), 200
 
@@ -165,21 +165,21 @@ def deleteTask(uid):
         data = request.get_json()
         _taskId = str(data[API_TASK_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     task = db.session.query(Task).filter(Task.id==_taskId).first()
     
     if (task is None):
-        return getMessage(TASK_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
 
     permissionCheck = db.session.query(DashboardPermission). \
         filter_by(user_id=uid, dashboard_id=task.dashboard_id).first()
     
     if (permissionCheck is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     try:
         db.session.delete(task)
@@ -188,6 +188,6 @@ def deleteTask(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
 
-    return getMessage(SUCCEED_MESSAGE), 200
+    return getMessage(message=SUCCEED_MESSAGE), 200

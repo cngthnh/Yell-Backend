@@ -99,18 +99,14 @@ API_TOKEN_TYPE = 'token_type'
 
 # Endpoints
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE
-EMAIL_VRF_ENDPOINT = '/api/users/verify/<token>' # GET
 EMAIL_VRF_SIGNATURE = '/api/users/verify/'
 AUTH_ENDPOINT = '/api/auth' # GET, POST, DELETE
-AUTHORIZED_TEST_ENDPOINT = '/api/users/authorized' 
-USERS_CHECK_ENDPOINT = '/api/check' # GET
 TASKS_ENDPOINT = '/api/tasks' # GET, POST, PATCH, DELETE
 DASHBOARDS_ENDPOINT = '/api/dashboards' # GET, POST, PATCH, DELETE
-DASHBOARDS_PERMISSION_ENDPOINT = '/api/dashboards/permission' # POST, DELETE
-DASHBOARD_INVITATION_ENDPOINT = '/api/dashboards/invitation/<token>' # GET
 DASHBOARD_INVITATION_SIGNATURE = '/api/dashboards/invitation/'
 BUDGETS_ENDPOINT = '/api/budgets' # GET, POST, PATCH, DELETE
 TRANSACTIONS_ENDPOINT = '/api/transactions' # GET, POST, PATCH, DELETE
+HOME_ENDPOINT = '/' # GET
 
 # regex
 REGEX_EMAIL = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'

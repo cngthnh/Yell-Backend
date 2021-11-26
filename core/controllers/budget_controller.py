@@ -14,7 +14,7 @@ def createBudget(uid):
         name = str(data[API_NAME])
         balance = int(data[API_BALANCE])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     budget = Budget(uid, 
                 name, 
@@ -30,7 +30,7 @@ def createBudget(uid):
         if (API_THRESHOLD in fields and data[API_THRESHOLD] is not None):
             budget.threshold = datetime.fromisoformat(str(data[API_THRESHOLD]))
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     try:
         db.session.add(budget)
@@ -39,21 +39,21 @@ def createBudget(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE, budget_id=budget.id), 200
+    return getMessage(message=SUCCEED_MESSAGE, budget_id=budget.id), 200
 
 @tokenRequired
 def getBudget(uid):
     try:
         _budgetId = str(request.args[API_BUDGET_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     budget = db.session.query(Budget).filter_by(owner_id=uid, id=_budgetId).first()
 
     if budget is None:
-        return getMessage(BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
 
     fetchType = request.args.get(API_FETCH)
     if (fetchType==API_FULL):
@@ -69,11 +69,11 @@ def updateBudget(uid):
         data = request.get_json()
         _budgetId = str(data[API_BUDGET_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     budget = db.session.query(Budget).filter_by(id=_budgetId, owner_id=uid).first()
     if budget is None:
-        return getMessage(BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
 
     fields = data.keys()
 
@@ -89,7 +89,7 @@ def updateBudget(uid):
         if API_THRESHOLD in fields and data[API_THRESHOLD] is not None:
             budget.threshold = int(data[API_THRESHOLD])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     budget.updated_at = datetime.utcnow()
 
@@ -100,9 +100,9 @@ def updateBudget(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE), 200
+    return getMessage(message=SUCCEED_MESSAGE), 200
 
 @tokenRequired
 def deleteBudget(uid):
@@ -110,12 +110,12 @@ def deleteBudget(uid):
         data = request.get_json()
         _budgetId = str(data[API_BUDGET_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     budget = db.session.query(Budget).filter_by(id=_budgetId, owner_id=uid).first()
 
     if (budget is None):
-        return getMessage(BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=BUDGET_DOES_NOT_EXISTS_MESSAGE), 404
 
     try:
         db.session.delete(budget)
@@ -124,6 +124,6 @@ def deleteBudget(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE), 200
+    return getMessage(message=SUCCEED_MESSAGE), 200

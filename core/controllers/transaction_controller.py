@@ -14,11 +14,11 @@ def createTransaction(uid):
         amount = int(data[API_AMOUNT])
         budgetId = str(data[API_BUDGET_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     currentBudget = db.session.query(Budget).filter_by(id=budgetId, owner_id=uid).first()
     if (currentBudget is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     transaction = Transaction(budgetId, amount)
 
@@ -29,7 +29,7 @@ def createTransaction(uid):
         if (API_TIME in fields and data[API_TIME] is not None):
             transaction.time = datetime.fromisoformat(str(data[API_TIME]))
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     try:
         currentBudget.balance += amount
@@ -40,25 +40,25 @@ def createTransaction(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE, transaction_id=transaction.id), 200
+    return getMessage(message=SUCCEED_MESSAGE, transaction_id=transaction.id), 200
 
 @tokenRequired
 def getTransaction(uid):
     try:
         transactionId = str(request.args[API_TRANSACTION_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
     if (transaction is None):
-        return getMessage(TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
 
     permissionCheck = db.session.query(Budget).join(UserAccount.budgets).\
         filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
     if permissionCheck is None:
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     return genTransactionInfo(transaction.dict()), 200
 
@@ -68,16 +68,16 @@ def updateTransaction(uid):
         data = request.get_json()
         transactionId = str(data[API_TRANSACTION_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
     if (transaction is None):
-        return getMessage(TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
 
     currentBudget = db.session.query(Budget).join(UserAccount.budgets).\
         filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
     if currentBudget is None:
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     try:
         fields = data.keys()
@@ -89,7 +89,7 @@ def updateTransaction(uid):
             currentBudget.balance += int(data[API_AMOUNT]) - transaction.amount
             transaction.amount = int(data[API_AMOUNT])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     transaction.updated_at = datetime.utcnow()
 
@@ -100,9 +100,9 @@ def updateTransaction(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE), 200
+    return getMessage(message=SUCCEED_MESSAGE), 200
 
 @tokenRequired
 def deleteTransaction(uid):
@@ -110,16 +110,16 @@ def deleteTransaction(uid):
         data = request.get_json()
         transactionId = str(data[API_TRANSACTION_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
     if (transaction is None):
-        return getMessage(TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=TRANSACTION_DOES_NOT_EXISTS_MESSAGE), 404
 
     currentBudget = db.session.query(Budget).join(UserAccount.budgets).\
         filter(Budget.id==transaction.budget_id, UserAccount.id==uid).first()
     if currentBudget is None:
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
     
     try:
         currentBudget.balance -= transaction.amount
@@ -129,6 +129,6 @@ def deleteTransaction(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE), 200
+    return getMessage(message=SUCCEED_MESSAGE), 200

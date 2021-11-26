@@ -14,7 +14,7 @@ def createDashboard(uid):
         data = request.get_json()
         _name = str(data[API_NAME])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     dashboard = Dashboard(_name)
     permission = DashboardPermission(dashboard, ADMIN_ROLE)
@@ -27,30 +27,30 @@ def createDashboard(uid):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE, dashboard_id=dashboard.id), 201
+    return getMessage(message=SUCCEED_MESSAGE, dashboard_id=dashboard.id), 201
 
 @tokenRequired
 def getDashboard(uid):
     try:
         dashboard_id = str(request.args[API_DASHBOARD_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     permissionCheck = db.session.query(DashboardPermission). \
         filter_by(user_id=uid, dashboard_id=dashboard_id).first()
     
     if (permissionCheck is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     if (VIEW_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     dashboard = db.session.query(Dashboard).filter_by(id=dashboard_id).first()
 
     if dashboard is None:
-        return getMessage(DASHBOARD_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=DASHBOARD_DOES_NOT_EXISTS_MESSAGE), 404
 
     fetchType = request.args.get(API_FETCH)
     
@@ -67,21 +67,21 @@ def updateDashboard(uid):
         data = request.get_json()
         _dashboardId = data[API_DASHBOARD_ID]
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     permissionCheck = db.session.query(DashboardPermission). \
         filter_by(user_id=uid, dashboard_id=_dashboardId).first()
     
     if (permissionCheck is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):
-        return getMessage(FORBIDDEN_MESSAGE), 400
+        return getMessage(message=FORBIDDEN_MESSAGE), 400
     
     fields = data.keys()
     
@@ -97,9 +97,9 @@ def updateDashboard(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE), 200
+    return getMessage(message=SUCCEED_MESSAGE), 200
 
 @tokenRequired
 def grantDashboardPermission(uid):
@@ -111,16 +111,16 @@ def grantDashboardPermission(uid):
         if _role not in DASHBOARD_ROLES:
             raise Exception()
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     permissionCheck = db.session.query(DashboardPermission). \
         filter_by(user_id=uid, dashboard_id=_dashboardId).first()
     
     if (permissionCheck is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     if (INVITE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
     
     alreadyConfirmed = db.session.query(DashboardPermission).filter_by(dashboard_id=_dashboardId, user_id=_targetUserId).first()
 
@@ -135,25 +135,25 @@ def grantDashboardPermission(uid):
             print(str(e))
             sys.stdout.flush()
             db.session.rollback()
-            return getMessage(FAILED_MESSAGE), 400
-        return getMessage(SUCCEED_MESSAGE), 200
+            return getMessage(message=FAILED_MESSAGE), 400
+        return getMessage(message=SUCCEED_MESSAGE), 200
 
     dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):
-        return getMessage(FORBIDDEN_MESSAGE), 400
+        return getMessage(message=FORBIDDEN_MESSAGE), 400
 
     targetUser = db.session.query(UserAccount).filter_by(id=_targetUserId).first()
 
     if (targetUser is None):
-        return getMessage(USER_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
 
     sendDashboardInvitation(encode({API_UID: _targetUserId, 
                                     API_DASHBOARD_ID: _dashboardId, 
                                     API_INVITED_BY: uid,
                                     API_ROLE: _role}), 
                             targetUser.email, targetUser.name, dashboard.name)
-    return getMessage(INVITATION_SENT_MESSAGE), 200
+    return getMessage(message=INVITATION_SENT_MESSAGE), 200
 
 @tokenRequired
 def removeDashboardPermission(uid):
@@ -162,27 +162,27 @@ def removeDashboardPermission(uid):
         _dashboardId = str(data[API_DASHBOARD_ID])
         _targetUserId = str(data[API_UID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     permissionCheck = db.session.query(DashboardPermission). \
         filter_by(user_id=uid, dashboard_id=_dashboardId).first()
     
     if (permissionCheck is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     if (INVITE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
     
     permissionCheck = db.session.query(DashboardPermission). \
         filter_by(user_id=_targetUserId, dashboard_id=_dashboardId).first()
     
     if (permissionCheck is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     targetUser = db.session.query(UserAccount).filter_by(id=_targetUserId).first()
 
     if (targetUser is None):
-        return getMessage(USER_DOES_NOT_EXISTS_MESSAGE), 404
+        return getMessage(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
     
     targetUser.dashboards.remove(permissionCheck)
 
@@ -193,18 +193,18 @@ def removeDashboardPermission(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
 
-    return getMessage(SUCCEED_MESSAGE), 200
+    return getMessage(message=SUCCEED_MESSAGE), 200
 
 def confirmDashboardInvitation(token):
     if not verifyToken(token):
-        return getMessage(INVALID_TOKEN_MESSAGE), 403
+        return getMessage(message=INVALID_TOKEN_MESSAGE), 403
 
     try:
         tokenDict = decode(token)
     except jwt.ExpiredSignatureError:
-        return getMessage(EXPIRED_TOKEN_MESSAGE), 401
+        return getMessage(message=EXPIRED_TOKEN_MESSAGE), 401
 
     try:
         dashboard = db.session.query(Dashboard).filter_by(id=tokenDict[API_DASHBOARD_ID]).first()
@@ -215,7 +215,7 @@ def confirmDashboardInvitation(token):
     except Exception as e:
         print(str(e))
         sys.stdout.flush()
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     try:
         db.session.add(user)
@@ -224,9 +224,9 @@ def confirmDashboardInvitation(token):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE), 200
+    return getMessage(message=SUCCEED_MESSAGE), 200
 
 @tokenRequired
 def deleteDashboard(uid):
@@ -234,21 +234,21 @@ def deleteDashboard(uid):
         data = request.get_json()
         _dashboardId = str(data[API_DASHBOARD_ID])
     except Exception:
-        return getMessage(INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     permissionCheck = db.session.query(DashboardPermission). \
         filter_by(user_id=uid, dashboard_id=_dashboardId).first()
     
     if (permissionCheck is None):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     if (DELETE_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return getMessage(FORBIDDEN_MESSAGE), 403
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
     
     dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
 
     if (dashboard is None):
-        return getMessage(FORBIDDEN_MESSAGE), 400
+        return getMessage(message=FORBIDDEN_MESSAGE), 400
 
     try:
         db.session.delete(dashboard)
@@ -257,6 +257,6 @@ def deleteDashboard(uid):
         print(str(e))
         sys.stdout.flush()
         db.session.rollback()
-        return getMessage(FAILED_MESSAGE), 400
+        return getMessage(message=FAILED_MESSAGE), 400
     
-    return getMessage(SUCCEED_MESSAGE), 200
+    return getMessage(message=SUCCEED_MESSAGE), 200
