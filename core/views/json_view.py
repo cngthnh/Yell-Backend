@@ -1,4 +1,4 @@
 import json
 
-def makeJson(**data) -> str:
+def makeJson(data) -> str:
     return json.dumps(data)
