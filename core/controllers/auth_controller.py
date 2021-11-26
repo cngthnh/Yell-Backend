@@ -2,6 +2,7 @@ from flask import request, jsonify
 from ..utils.definitions import *
 from ..utils.cipher import *
 from ..loader import *
+from ..database.models import Session
 
 from functools import wraps
 def tokenRequired(func):
