@@ -5,49 +5,8 @@ from flask import request, jsonify
 from .loader import *
 from .database.models import *
 from .database.utils import *
-from functools import wraps
 from .utils.email import sendDashboardInvitation, sendVerificationEmail
 import sys
-
-def tokenRequired(func):
-    @wraps(func)
-    def tokenCheck(*args, **kwargs):
-        try:
-            token = request.headers['Authorization']
-            schema, token = token.split(maxsplit=1)
-            if schema!='Bearer':
-                return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-        except Exception:
-            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-
-        # parse token => dict of info
-        try:
-            tokenDict = decode(token)
-            if tokenDict[ISSUER_KEY] != YELL_ISSUER:
-                return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-            if (tokenDict[API_TOKEN_TYPE]!=ACCESS_TOKEN_TYPE):
-                return jsonify(message=ACCESS_TOKEN_REQUIRED_MESSAGE), 403
-
-            session = db.session.query(Session).filter_by(id=tokenDict[SESSION_ID_KEY]).first()
-
-            if session is None:
-                return jsonify(message=INVALID_SESSION_MESSAGE), 403
-
-            if (int(session.updated_at.timestamp())!=tokenDict[ISSUED_AT_KEY]):
-                try:
-                    db.session.delete(session)
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-                return jsonify(message=INVALID_SESSION_MESSAGE), 403
-
-        except jwt.ExpiredSignatureError:
-            return jsonify(message=EXPIRED_TOKEN_MESSAGE), 401
-        except Exception:
-            return jsonify(message=INVALID_TOKEN_MESSAGE), 403
-        
-        return func(*args, **kwargs, uid=session.user_id)
-    return tokenCheck
 
 @app.route('/')
 def homepage():
@@ -191,10 +150,7 @@ def refreshToken():
     except Exception:
         return jsonify(message=INVALID_TOKEN_MESSAGE), 403
     
-@app.route(AUTHORIZED_TEST_ENDPOINT, methods=['POST'])
-@tokenRequired
-def authorized(uid):
-    return jsonify(message='AUTHORIZED'), 200
+
 
 @app.route(EMAIL_VRF_ENDPOINT, methods=['GET'])
 def verifyAccount(token):
@@ -362,135 +318,7 @@ def createDashboard(uid):
     
     return jsonify(message=SUCCEED_MESSAGE, dashboard_id=dashboard.id), 201
 
-@app.route(TASKS_ENDPOINT, methods=['POST'])
-@tokenRequired
-def createTask(uid):
-    try:
-        data = request.get_json()
-        _name = str(data[API_NAME])
-        _dashboardId = str(data[API_DASHBOARD_ID])
-    except Exception:
-        return jsonify(message=INVALID_DATA_MESSAGE), 400
 
-    permissionCheck = db.session.query(DashboardPermission). \
-        filter_by(user_id=uid, dashboard_id=_dashboardId).first()
-    
-    if (permissionCheck is None):
-        return jsonify(message=FORBIDDEN_MESSAGE), 403
-
-    if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return jsonify(message=FORBIDDEN_MESSAGE), 403
-
-    currentDashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
-
-    if (currentDashboard is None):
-        return jsonify(message=INVALID_DASHBOARD_MESSAGE), 403
-
-    task = Task(_name,
-                _dashboardId)
-    
-    fields = data.keys()
-    try:
-        if (API_STATUS in fields and data[API_STATUS] is not None):
-            task.status = int(data[API_STATUS])
-        if (API_NOTI_LEVEL in fields and data[API_NOTI_LEVEL] is not None):
-            task.notification_level = int(data[API_NOTI_LEVEL])
-        if (API_PRIORITY in fields and data[API_PRIORITY] is not None):
-            task.priority = int(data[API_PRIORITY])
-        if (API_PARENT_ID in fields and data[API_PARENT_ID] is not None):
-            task.parent_id = str(data[API_PARENT_ID])
-        if (API_START_TIME in fields and data[API_START_TIME] is not None):
-            task.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
-        if (API_END_TIME in fields and data[API_END_TIME] is not None):
-            task.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
-        if (API_LABELS in fields and data[API_LABELS] is not None):
-            task.labels = str(data[API_LABELS])
-        if (API_CONTENT in fields and data[API_CONTENT] is not None):
-            task.content = str(data[API_CONTENT])
-    except Exception:
-        return jsonify(message=INVALID_DATA_MESSAGE), 400
-
-    try:
-        currentDashboard.tasks.append(task)
-        db.session.add(currentDashboard)
-        db.session.commit()
-    except SQLAlchemyError:
-        print(str(e))
-        sys.stdout.flush()
-        db.session.rollback()
-        return jsonify(message=FAILED_MESSAGE), 400
-    
-    return jsonify(message=SUCCEED_MESSAGE, task_id=task.id), 201
-
-@app.route(TASKS_ENDPOINT, methods=['PATCH'])
-@tokenRequired
-def updateTask(uid):
-    try:
-        data = request.get_json()
-        _taskId = str(data[API_TASK_ID])
-    except Exception:
-        return jsonify(message=INVALID_DATA_MESSAGE), 400
-    
-    task = db.session.query(Task).filter(Task.id==_taskId).first()
-
-    if (task is None):
-        return jsonify(message=TASK_DOES_NOT_EXISTS_MESSAGE), 404
-
-    permissionCheck = db.session.query(DashboardPermission). \
-        filter_by(user_id=uid, dashboard_id=task.dashboard_id).first()
-    
-    if (permissionCheck is None):
-        return jsonify(message=FORBIDDEN_MESSAGE), 403
-
-    if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-        return jsonify(message=FORBIDDEN_MESSAGE), 403
-
-    fields = data.keys()
-
-    try:
-        if API_NAME in fields and data[API_NAME] is not None:
-            task.name = str(data[API_NAME])
-        if API_STATUS in fields and data[API_STATUS] is not None:
-            task.status = int(data[API_STATUS])
-        if API_NOTI_LEVEL in fields and data[API_NOTI_LEVEL] is not None:
-            task.notification_level = int(data[API_NOTI_LEVEL])
-        if API_PRIORITY in fields and data[API_PRIORITY] is not None:
-            task.priority = int(data[API_PRIORITY])
-        if API_PARENT_ID in fields and data[API_PARENT_ID] is not None:
-            task.parent_id = str(data[API_PARENT_ID])
-        if API_START_TIME in fields and data[API_START_TIME] is not None:
-            task.start_time = datetime.fromisoformat(data[API_START_TIME])
-        if API_END_TIME in fields and data[API_END_TIME] is not None:
-            task.end_time = datetime.fromisoformat(data[API_END_TIME])
-        if API_LABELS in fields and data[API_LABELS] is not None:
-            task.labels = str(data[API_LABELS])
-        if API_CONTENT in fields and data[API_CONTENT] is not None:
-            task.content = str(data[API_CONTENT])
-        if API_DASHBOARD_ID in fields and data[API_DASHBOARD_ID] is not None:
-            permissionCheck = db.session.query(DashboardPermission). \
-                filter_by(user_id=uid, dashboard_id=data[API_DASHBOARD_ID]).first()
-
-            if (permissionCheck is None):
-                return jsonify(message=FORBIDDEN_MESSAGE), 403
-            if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
-                return jsonify(message=FORBIDDEN_MESSAGE), 403
-
-            task.dashboard_id = str(data[API_DASHBOARD_ID])
-    except Exception:
-        return jsonify(message=INVALID_DATA_MESSAGE), 400
-
-    task.updated_at = datetime.utcnow()
-
-    try:
-        db.session.add(task)
-        db.session.commit()
-    except SQLAlchemyError as e:
-        print(str(e))
-        sys.stdout.flush()
-        db.session.rollback()
-        return jsonify(message=FAILED_MESSAGE), 400
-    
-    return jsonify(message=SUCCEED_MESSAGE), 200
 
 @app.route(USERS_ENDPOINT, methods=['GET'])
 @tokenRequired
