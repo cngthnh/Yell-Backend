@@ -143,6 +143,9 @@ def refreshToken():
             return jsonify(message=INVALID_TOKEN_MESSAGE), 403
         if (tokenDict[API_TOKEN_TYPE]!=REFRESH_TOKEN_TYPE):
             return jsonify(message=REFRESH_TOKEN_REQUIRED_MESSAGE), 403
+
+        print(tokenDict)
+        sys.stdout.flush()
         
         session = db.session.query(Session).filter_by(id=tokenDict[SESSION_ID_KEY]).first()
         if (session is None):
