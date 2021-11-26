@@ -1,5 +1,4 @@
 from flask import request, jsonify
-from ..utils.definitions import *
 from ..utils.cipher import *
 from ..loader import *
 from ..models.models import Session
@@ -47,8 +46,6 @@ def tokenRequired(func):
         return func(*args, **kwargs, uid=session.user_id)
     return tokenCheck
 
-
-@app.route(AUTH_ENDPOINT, methods=['DELETE'])
 def logout():
     try:
         token = request.headers['Authorization']
@@ -86,7 +83,6 @@ def logout():
     
     return jsonify(message=SUCCEED_MESSAGE), 200
 
-@app.route(AUTH_ENDPOINT, methods=['POST'])
 def getToken():
     try:
         data = request.get_json()
@@ -127,7 +123,6 @@ def getToken():
         sys.stdout.flush()
         return jsonify(message=INVALID_CREDENTIALS_MESSAGE), 401
 
-@app.route(AUTH_ENDPOINT, methods=['GET'])
 def refreshToken():
     try:
         token = request.headers['Authorization']
