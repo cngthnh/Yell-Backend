@@ -51,11 +51,11 @@ def createAccount():
 
     user = UserAccount(_uid, _email, _name, _hash)
 
-    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid).first()
+    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid, code_type=CODE_TYPE_EMAIL).first()
     if (veriRecord is not None):
         veriRecord.refresh()
     else:
-        veriRecord = VerificationCode(user.id)
+        veriRecord = VerificationCode(user.id, CODE_TYPE_EMAIL)
 
     try:
         db.session.add(user)
@@ -95,11 +95,11 @@ def updateAccount(uid):
                 return getMessage(message=INVALID_EMAIL_MESSAGE), 400
             user.confirmed = False
             emailChanged = True
-            veriRecord = db.session.query(VerificationCode).filter_by(user_id=uid).first()
+            veriRecord = db.session.query(VerificationCode).filter_by(user_id=uid, code_type=CODE_TYPE_EMAIL).first()
             if (veriRecord is not None):
                 veriRecord.refresh()
             else:
-                veriRecord = VerificationCode(user.id)
+                veriRecord = VerificationCode(user.id, CODE_TYPE_EMAIL)
 
         if (API_NAME in fields and data[API_NAME] is not None):
             user.name = str(data[API_NAME])
@@ -200,7 +200,7 @@ def verifyAccountByCode():
     if (not re.fullmatch(REGEX_UID, _uid)):
         return getMessage(message=INVALID_UID_MESSAGE), 400
 
-    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid).first()
+    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid, code_type=CODE_TYPE_EMAIL).first()
     if (veriRecord is None):
         return getMessage(message=INVALID_REQUEST_MESSAGE), 400
 
@@ -235,7 +235,7 @@ def resendVerificationEmail():
     if (user.confirmed):
         return getMessage(message=INVALID_REQUEST_MESSAGE), 400
 
-    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid).first()
+    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid, code_type=CODE_TYPE_EMAIL).first()
     if (veriRecord is None):
         return getMessage(message=INVALID_REQUEST_MESSAGE), 400
     
