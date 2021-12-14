@@ -272,9 +272,9 @@ class Transaction(db.Model):
 
 class VerificationCode(db.Model):
     __tablename__ = 'verification_code'
-    user_id = db.Column(db.String(MAX_UID_LENGTH), primary_key=True, nullable=False, default=generateCode)
+    user_id = db.Column(db.String(MAX_UID_LENGTH), primary_key=True, nullable=False)
     code_type = db.Column(db.Integer, primary_key=True, nullable=False)
-    code = db.Column(db.String(4), nullable=False)
+    code = db.Column(db.String(4), nullable=False, default=generateCode)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
