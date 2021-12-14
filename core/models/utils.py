@@ -18,7 +18,7 @@ def changeAccountStatus(uid, email, codeRecord = None):
     
     try:
         db.session.add(account)
-        db.session.remove(codeRecord)
+        db.session.delete(codeRecord)
         db.session.commit()
         return True
     except SQLAlchemyError:
