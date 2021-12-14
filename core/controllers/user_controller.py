@@ -221,14 +221,6 @@ def verifyAccountByCode():
         if (result is None):
             return getMessage(message=INVALID_REQUEST_MESSAGE), 400
         if (result == True):
-            try:
-                db.session.delete(veriRecord)
-                db.session.commit()
-            except SQLAlchemyError as e:
-                db.session.rollback()
-                print(str(e))
-                sys.stdout.flush()
-                return getMessage(message=FAILED_MESSAGE), 400
             return getMessage(message=SUCCEED_MESSAGE), 200
         return getMessage(message=FAILED_MESSAGE), 400
     
