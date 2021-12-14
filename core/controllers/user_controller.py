@@ -205,15 +205,44 @@ def verifyAccountByCode():
         return getMessage(message=INVALID_REQUEST_MESSAGE), 400
 
     if (_code == veriRecord.code):
+
         if (datetime.utcnow() - veriRecord.updated_at > timedelta(minutes=EMAIL_VERIFICATION_TIME)):
+            try:
+                db.session.delete(veriRecord)
+                db.session.commit()
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                print(str(e))
+                sys.stdout.flush()
+                return getMessage(message=FAILED_MESSAGE), 400
             return getMessage(message=EXPIRED_CODE_MESSAGE), 400
+
         result = changeAccountStatus(_uid, _email, veriRecord)
         if (result is None):
             return getMessage(message=INVALID_REQUEST_MESSAGE), 400
         if (result == True):
+            try:
+                db.session.delete(veriRecord)
+                db.session.commit()
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                print(str(e))
+                sys.stdout.flush()
+                return getMessage(message=FAILED_MESSAGE), 400
             return getMessage(message=SUCCEED_MESSAGE), 200
         return getMessage(message=FAILED_MESSAGE), 400
     
+    # code is not valid
+    if (veriRecord.tries >= MAX_VERIFICATION_TRIES): # tried too many times
+        try:
+            db.session.delete(veriRecord)
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(str(e))
+            sys.stdout.flush()
+            return getMessage(message=FAILED_MESSAGE), 400
+        return getMessage(message=EXPIRED_CODE_MESSAGE), 400
     return getMessage(message=INVALID_REQUEST_MESSAGE), 400
 
 def resendVerificationEmail():
