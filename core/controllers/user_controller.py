@@ -205,7 +205,7 @@ def verifyAccountByCode():
         return getMessage(message=INVALID_REQUEST_MESSAGE), 400
 
     if (_code == veriRecord.code):
-        if (datetime.utcnow() - veriRecord.updated_at > timedelta(seconds=EMAIL_VERIFICATION_TIME)):
+        if (datetime.utcnow() - veriRecord.updated_at > timedelta(minutes=EMAIL_VERIFICATION_TIME)):
             return getMessage(message=EXPIRED_CODE_MESSAGE), 400
         result = changeAccountStatus(_uid, _email, veriRecord)
         if (result is None):
