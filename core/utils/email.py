@@ -15,12 +15,12 @@ def sendEmailAsync(msg):
     sender = threading.Thread(name='mail_sender', target=sendMessage, args=(msg,))
     sender.start()
 
-def sendVerificationEmail(recipient, token, recipient_name):
+def sendVerificationEmail(recipient, token, recipient_name, code):
     sender_mail = os.environ.get('MAIL_USERNAME')
     msg = Message(subject = 'Yell Account Verification', sender = ('Yell', sender_mail), recipients = [recipient])
     link = os.environ.get('YELL_MAIN_URL', '') + EMAIL_VRF_SIGNATURE + token
-    msg.body = render_template(EMAIL_VRF_TEMPLATE_TXT, name = recipient_name, link = link)
-    msg.html = render_template(EMAIL_VRF_TEMPLATE_HTML, link = link, name = recipient_name, mail = sender_mail)
+    msg.body = render_template(EMAIL_VRF_TEMPLATE_TXT, name = recipient_name, link = link, code = code)
+    msg.html = render_template(EMAIL_VRF_TEMPLATE_HTML, link = link, name = recipient_name, mail = sender_mail, code = code)
     sendEmailAsync(msg)
 
 def sendDashboardInvitation(token, recipient_email, recipient_name, dashboard_name):

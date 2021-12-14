@@ -1,5 +1,7 @@
 from sqlalchemy.exc import SQLAlchemyError
 import sys
+
+from ..utils.utils import generateCode
 from ..utils.definitions import *
 from ..loader import db
 import uuid
@@ -267,6 +269,20 @@ class Transaction(db.Model):
             API_UPDATED_AT: self.updated_at.isoformat()
         }
         return result
+
+class VerificationCode(db.Model):
+    __tablename__ = 'verification_code'
+    user_id = db.Column(db.String(MAX_UID_LENGTH), primary_key=True, nullable=False, default=generateCode)
+    code = db.Column(db.String(4), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __init__(self, user_id):
+        self.user_id = user_id
+    
+    def refresh(self):
+        self.code = generateCode()
+        self.updated_at = datetime.utcnow()
 
 try:
     db.create_all()

@@ -1,4 +1,6 @@
 from flask import request, jsonify
+
+from ..utils.utils import generateCode
 from ..loader import *
 from ..utils.cipher import *
 from ..utils.email import *
@@ -21,6 +23,10 @@ def verifyAccount(token):
         result = changeAccountStatus(tokenDict[API_UID], tokenDict[API_EMAIL])
     except Exception:
         return getMessage(message=INVALID_TOKEN_MESSAGE), 403
+    
+    if (result is None):
+        return getMessage(message=INVALID_REQUEST_MESSAGE), 400
+
     if result == True:
         return getMessage(message=VERIFIED_MESSAGE), 200
     else:
@@ -44,9 +50,16 @@ def createAccount():
         return getMessage(message=INVALID_HASH_MESSAGE), 400
 
     user = UserAccount(_uid, _email, _name, _hash)
-    db.session.add(user)
+
+    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid).first()
+    if (veriRecord is not None):
+        veriRecord.refresh()
+    else:
+        veriRecord = VerificationCode(user.id)
 
     try:
+        db.session.add(user)
+        db.session.add(veriRecord)
         db.session.commit()
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -54,7 +67,7 @@ def createAccount():
         sys.stdout.flush()
         return getMessage(message=FAILED_MESSAGE), 400
 
-    sendVerificationEmail(_email, encode({API_UID: _uid, API_EMAIL: _email}, EMAIL_VERIFICATION_TIME), _name)
+    sendVerificationEmail(_email, encode({API_UID: _uid, API_EMAIL: _email}, EMAIL_VERIFICATION_TIME), _name, veriRecord.code)
 
     return getMessage(message=PENDING_VERIFICATION_MESSAGE), 200
 
@@ -74,6 +87,7 @@ def updateAccount(uid):
         return getMessage(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
 
     emailChanged = False
+    veriRecord = None
     try:
         if (API_EMAIL in fields and data[API_EMAIL] is not None):
             user.email = str(data[API_EMAIL])
@@ -81,6 +95,12 @@ def updateAccount(uid):
                 return getMessage(message=INVALID_EMAIL_MESSAGE), 400
             user.confirmed = False
             emailChanged = True
+            veriRecord = db.session.query(VerificationCode).filter_by(user_id=uid).first()
+            if (veriRecord is not None):
+                veriRecord.refresh()
+            else:
+                veriRecord = VerificationCode(user.id)
+
         if (API_NAME in fields and data[API_NAME] is not None):
             user.name = str(data[API_NAME])
         if (API_HASH in fields and data[API_HASH] is not None):
@@ -93,6 +113,8 @@ def updateAccount(uid):
     try:
         user.updated_at = datetime.utcnow()
         db.session.add(user)
+        if veriRecord is not None:
+            db.session.add(veriRecord)
         db.session.commit()
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -101,7 +123,7 @@ def updateAccount(uid):
         return getMessage(message=FAILED_MESSAGE), 400
 
     if emailChanged:
-        sendVerificationEmail(user.email, encode({API_UID: uid, API_EMAIL: user.email}, EMAIL_VERIFICATION_TIME), user.name)
+        sendVerificationEmail(user.email, encode({API_UID: uid, API_EMAIL: user.email}, EMAIL_VERIFICATION_TIME), user.name, veriRecord.code)
         return getMessage(message=PENDING_VERIFICATION_MESSAGE), 200
 
     return getMessage(message=SUCCEED_MESSAGE), 200
@@ -161,3 +183,61 @@ def getUserProfile(uid):
             return genUserInfo(user.compactDict()), 200
 
     return getMessage(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
+
+def verifyAccountByCode():
+    try:
+        data = request.get_json()
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+
+    try:
+        _uid = str(data[API_UID])
+        _code = str(data[API_CODE])
+        _email = str(data[API_EMAIL])
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+
+    if (not re.fullmatch(REGEX_UID, _uid)):
+        return getMessage(message=INVALID_UID_MESSAGE), 400
+
+    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid).first()
+    if (veriRecord is None):
+        return getMessage(message=INVALID_REQUEST_MESSAGE), 400
+
+    if (_code == veriRecord.code):
+        result = changeAccountStatus(_uid, _email, veriRecord)
+        if (result is None):
+            return getMessage(message=INVALID_REQUEST_MESSAGE), 400
+        if (result == True):
+            return getMessage(message=SUCCEED_MESSAGE), 200
+        return getMessage(message=FAILED_MESSAGE), 400
+    
+    return getMessage(message=INVALID_REQUEST_MESSAGE), 400
+
+def resendVerificationEmail():
+    try:
+        data = request.get_json()
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+
+    try:
+        _uid = str(data[API_UID])
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+
+    if (not re.fullmatch(REGEX_UID, _uid)):
+        return getMessage(message=INVALID_UID_MESSAGE), 400
+
+    user = db.session.query(UserAccount).filter_by(id=_uid).first()
+    if (user is None):
+        return getMessage(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
+    
+    if (user.confirmed):
+        return getMessage(message=INVALID_REQUEST_MESSAGE), 400
+
+    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid).first()
+    if (veriRecord is None):
+        return getMessage(message=INVALID_REQUEST_MESSAGE), 400
+
+    sendVerificationEmail(user.email, encode({API_UID: _uid, API_EMAIL: user.email}, EMAIL_VERIFICATION_TIME), user.name, veriRecord.code)
+    return getMessage(message=PENDING_VERIFICATION_MESSAGE), 200

@@ -8,9 +8,17 @@ def checkAccount(uid, hash):
         return False
     return True
 
-def changeAccountStatus(uid, email):
-    db.session.query(UserAccount).filter_by(id = uid, email = email).update({'confirmed': True})
+def changeAccountStatus(uid, email, codeRecord = None):
+    account = db.session.query(UserAccount).filter_by(id = uid, email = email).first()
+    if account.confirmed:
+        return None
+    account.confirmed = True
+    if (codeRecord is None):
+        codeRecord = db.session.query(VerificationCode).filter_by(user_id = uid).first()
+    
     try:
+        db.session.add(account)
+        db.session.remove(codeRecord)
         db.session.commit()
         return True
     except SQLAlchemyError:
