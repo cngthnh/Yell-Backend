@@ -238,6 +238,16 @@ def resendVerificationEmail():
     veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid).first()
     if (veriRecord is None):
         return getMessage(message=INVALID_REQUEST_MESSAGE), 400
+    
+    try:
+        veriRecord.refresh()
+        db.session.add(veriRecord)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(str(e))
+        sys.stdout.flush()
+        return getMessage(message=FAILED_MESSAGE), 400
 
     sendVerificationEmail(user.email, encode({API_UID: _uid, API_EMAIL: user.email}, EMAIL_VERIFICATION_TIME), user.name, veriRecord.code)
     return getMessage(message=PENDING_VERIFICATION_MESSAGE), 200
