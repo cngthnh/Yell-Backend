@@ -1,6 +1,5 @@
-from core.views.message_view import getMessage
+from .message_view import getMessage
 from ..models.models import Session
-from .json_view import makeJson
 from ..utils.cipher import *
 from ..utils.definitions import *
 
