@@ -54,6 +54,7 @@ def createAccount():
     veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid, code_type=CODE_TYPE_EMAIL).first()
     if (veriRecord is not None):
         veriRecord.refresh()
+        veriRecord.tries = 0
     else:
         veriRecord = VerificationCode(user.id, CODE_TYPE_EMAIL)
 
@@ -98,6 +99,7 @@ def updateAccount(uid):
             veriRecord = db.session.query(VerificationCode).filter_by(user_id=uid, code_type=CODE_TYPE_EMAIL).first()
             if (veriRecord is not None):
                 veriRecord.refresh()
+                veriRecord.tries = 0
             else:
                 veriRecord = VerificationCode(user.id, CODE_TYPE_EMAIL)
 
@@ -223,7 +225,7 @@ def verifyAccountByCode():
         if (result == True):
             return getMessage(message=SUCCEED_MESSAGE), 200
         return getMessage(message=FAILED_MESSAGE), 400
-    
+    veriRecord.tries += 1
     # code is not valid
     if (veriRecord.tries >= MAX_VERIFICATION_TRIES): # tried too many times
         try:
@@ -264,6 +266,7 @@ def resendVerificationEmail():
     
     try:
         veriRecord.refresh()
+        veriRecord.tries = 0
         db.session.add(veriRecord)
         db.session.commit()
     except SQLAlchemyError as e:
