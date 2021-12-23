@@ -42,10 +42,10 @@ class S3Handler(object):
             return None
         return response
 
-    def uploadAsync(self, task_id, object_name):
+    def uploadAsync(self, file_name, task_id, object_name):
         @copy_current_request_context
-        def sendMessage(task_id, object_name):
-            self.upload(task_id, object_name)
+        def sendMessage(file_name, task_id, object_name):
+            self.upload(file_name, task_id, object_name)
 
-        sender = threading.Thread(name='mail_sender', target=sendMessage, args=(task_id, object_name,))
+        sender = threading.Thread(name='mail_sender', target=sendMessage, args=(file_name, task_id, object_name,))
         sender.start()
