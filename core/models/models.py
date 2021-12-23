@@ -187,7 +187,8 @@ class Task(db.Model):
             API_END_TIME: self.end_time.isoformat() if self.start_time is not None else None,
             API_LABELS: self.labels,
             API_CREATED_AT: self.created_at.isoformat(),
-            API_UPDATED_AT: self.updated_at.isoformat()
+            API_UPDATED_AT: self.updated_at.isoformat(),
+            API_FILES: files
         }
         return result
 
