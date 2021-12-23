@@ -42,7 +42,7 @@ def createTask(uid):
     for k, v in zip(files.keys(), files.values()):
         fileName = uuid.uuid4().hex
         v.save(TEMP_FOLDER + fileName)
-        s3.uploadAsync(TEMP_FOLDER + fileName, task.id, k)
+        s3.uploadAsync(TEMP_FOLDER + fileName, str(task.id), k)
         if (task.files is not None):
             if (k not in task.files.split(',')):
                 if (task.files != ''):
@@ -111,7 +111,7 @@ def updateTask(uid):
     for k, v in zip(files.keys(), files.values()):
         fileName = uuid.uuid4().hex
         v.save(TEMP_FOLDER + fileName)
-        s3.uploadAsync(TEMP_FOLDER + fileName, task.id, k)
+        s3.uploadAsync(TEMP_FOLDER + fileName, str(task.id), k)
         if (task.files is not None):
             if (k not in task.files.split(',')):
                 if (task.files != ''):
