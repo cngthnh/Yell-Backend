@@ -20,7 +20,7 @@ class S3Handler(object):
                                    endpoint_url=None,
                                    aws_access_key_id=self.id_key,
                                    aws_secret_access_key=self.secret_key,
-                                   region_name='us-west-2'
+                                   region_name='us-east-2'
                                    )
 
     def upload(self, file_name, task_id, object_name):
