@@ -160,6 +160,7 @@ def updateTask(uid):
             task.dashboard_id = str(data[API_DASHBOARD_ID])
         if API_DELETE_FILES in fields and data[API_DELETE_FILES] is not None:
             for file in data[API_DELETE_FILES]:
+                s3.delete(str(task.id), file)
                 task.files.replace(file, '')
                 task.files.replace(',,')
     except Exception:
@@ -222,6 +223,10 @@ def deleteTask(uid):
 
     if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return getMessage(message=FORBIDDEN_MESSAGE), 403
+
+    s3 = S3Handler()
+    for file in task.files.split(','):
+        s3.delete(str(task.id), file)
 
     try:
         db.session.delete(task)

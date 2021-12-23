@@ -41,6 +41,14 @@ class S3Handler(object):
             logging.error(e)
             return None
         return response
+    
+    def delete(self, task_id, object_name):
+        try:
+            self.client.delete_object(Bucket=self.bucket_name, Key=task_id + "/" + object_name)
+        except ClientError as e:
+            logging.error(e)
+            return False
+        return True
 
     def uploadAsync(self, file_name, task_id, object_name):
         @copy_current_request_context
