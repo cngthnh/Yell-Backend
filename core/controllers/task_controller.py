@@ -7,11 +7,14 @@ from ..utils.email import *
 from ..models.utils import *
 from .auth_controller import tokenRequired
 from ..views.message_view import getMessage
+from ..utils.s3 import S3Handler
+import json
 
 @tokenRequired
 def createTask(uid):
     try:
-        data = request.get_json()
+        files = request.files
+        data = json.loads(request.form['data'])
         _name = str(data[API_NAME])
         _dashboardId = str(data[API_DASHBOARD_ID])
     except Exception:
@@ -33,7 +36,22 @@ def createTask(uid):
 
     task = Task(_name,
                 _dashboardId)
-    
+
+    s3 = S3Handler()
+
+    for k, v in zip(files.keys(), files.values()):
+        fileName = uuid.uuid4().hex
+        v.save(TEMP_FOLDER + fileName)
+        s3.uploadAsync(TEMP_FOLDER + fileName, task.id, k)
+        if (task.files is not None):
+            if (k not in task.files.split(',')):
+                if (task.files != ''):
+                    task.files += ',' + k
+                else:
+                    task.files += k
+        else:
+            task.files = k
+
     fields = data.keys()
     try:
         if (API_STATUS in fields and data[API_STATUS] is not None):
@@ -60,8 +78,6 @@ def createTask(uid):
         db.session.add(currentDashboard)
         db.session.commit()
     except SQLAlchemyError:
-        print(str(e))
-        sys.stdout.flush()
         db.session.rollback()
         return getMessage(message=FAILED_MESSAGE), 400
     
@@ -70,7 +86,8 @@ def createTask(uid):
 @tokenRequired
 def updateTask(uid):
     try:
-        data = request.get_json()
+        files = request.files
+        data = json.loads(request.form['data'])
         _taskId = str(data[API_TASK_ID])
     except Exception:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
@@ -88,6 +105,21 @@ def updateTask(uid):
 
     if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return getMessage(message=FORBIDDEN_MESSAGE), 403
+
+    s3 = S3Handler()
+
+    for k, v in zip(files.keys(), files.values()):
+        fileName = uuid.uuid4().hex
+        v.save(TEMP_FOLDER + fileName)
+        s3.uploadAsync(TEMP_FOLDER + fileName, task.id, k)
+        if (task.files is not None):
+            if (k not in task.files.split(',')):
+                if (task.files != ''):
+                    task.files += ',' + k
+                else:
+                    task.files += k
+        else:
+            task.files = k
 
     fields = data.keys()
 
@@ -120,6 +152,10 @@ def updateTask(uid):
                 return getMessage(message=FORBIDDEN_MESSAGE), 403
 
             task.dashboard_id = str(data[API_DASHBOARD_ID])
+        if API_DELETE_FILES in fields and data[API_DELETE_FILES] is not None:
+            for file in data[API_DELETE_FILES]:
+                task.files.replace(file, '')
+                task.files.replace(',,')
     except Exception:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
 

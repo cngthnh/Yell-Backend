@@ -3,6 +3,7 @@ YELL_ISSUER = 'Yell App by Yellion'
 EMAIL_VRF_TEMPLATE_HTML = 'email_verification_template.html'
 EMAIL_VRF_TEMPLATE_TXT = 'email_verification_template.txt'
 DASHBOARD_INV_TEMPLATE_TXT = 'dashboard_invitation_template.txt'
+TEMP_FOLDER = 'tmp_files/'
 MAX_UID_LENGTH = 64
 VIEWER_ROLE = 'viewer'
 EDITOR_ROLE = 'editor'
@@ -102,6 +103,7 @@ API_ROLE = 'role'
 API_CONTENT = 'content'
 API_TOKEN_TYPE = 'token_type'
 API_CODE = 'code'
+API_DELETE_FILES = 'delete_files'
 
 # Endpoints
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE

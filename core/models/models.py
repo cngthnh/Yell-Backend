@@ -7,6 +7,7 @@ from ..loader import db
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
+from ..utils.s3 import S3Handler
 
 class DashboardPermission(db.Model):
     __tablename__ = 'dashboard_permission'
@@ -135,6 +136,7 @@ class Task(db.Model):
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     labels = db.Column(db.String, nullable=True)
+    files = db.Column(db.String, nullable=True)
     dashboard_id = db.Column(UUID(as_uuid=True), db.ForeignKey('dashboard.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -163,6 +165,13 @@ class Task(db.Model):
         subtaskDetails = []
         for task in self.children:
             subtaskDetails.append(task.dict())
+        
+        s3 = S3Handler()
+
+        files = []
+        if self.files is not None:
+            for file in self.files.split(','):
+                files.append({file: s3.getLink(self.id, file)})
 
         result = {
             API_NAME: self.name,
