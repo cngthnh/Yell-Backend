@@ -37,6 +37,8 @@ def createTask(uid):
     task = Task(_name,
                 _dashboardId)
 
+    task.id = uuid.uuid4()
+
     s3 = S3Handler()
 
     for k, v in zip(files.keys(), files.values()):
