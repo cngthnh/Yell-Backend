@@ -42,9 +42,11 @@ def createTask(uid):
     s3 = S3Handler()
 
     for k, v in zip(files.keys(), files.values()):
-        fileName = uuid.uuid4().hex
-        v.save(TEMP_FOLDER + fileName)
-        s3.uploadAsync(TEMP_FOLDER + fileName, str(task.id), k)
+        fileName = TEMP_FOLDER + uuid.uuid4().hex
+        v.save(fileName)
+        if (os.path.getsize(fileName) > MAX_FILE_SIZE):
+            return getMessage(message=FILE_TOO_LARGE_MESSAGE), 400
+        s3.uploadAsync(fileName, str(task.id), k)
         if (task.files is not None):
             if (k not in task.files.split(',')):
                 if (task.files != ''):
@@ -111,9 +113,11 @@ def updateTask(uid):
     s3 = S3Handler()
 
     for k, v in zip(files.keys(), files.values()):
-        fileName = uuid.uuid4().hex
-        v.save(TEMP_FOLDER + fileName)
-        s3.uploadAsync(TEMP_FOLDER + fileName, str(task.id), k)
+        fileName = TEMP_FOLDER + uuid.uuid4().hex
+        v.save(fileName)
+        if (os.path.getsize(fileName) > MAX_FILE_SIZE):
+            return getMessage(message=FILE_TOO_LARGE_MESSAGE), 400
+        s3.uploadAsync(fileName, str(task.id), k)
         if (task.files is not None):
             if (k not in task.files.split(',')):
                 if (task.files != ''):
