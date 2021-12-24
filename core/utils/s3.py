@@ -5,7 +5,7 @@ from botocore.client import Config
 import os
 from flask import copy_current_request_context
 import threading
-from definitions import TASK_ATTACHMENT_FOLDER
+from .definitions import TASK_ATTACHMENT_FOLDER
 
 
 class S3Handler(object):
