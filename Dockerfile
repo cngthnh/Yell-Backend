@@ -16,4 +16,4 @@ ENV PORT 443
 WORKDIR /app
 
 # Use gunicorn as the entrypoint
-CMD exec gunicorn --bind :$PORT yell_backend:app --workers 1 --threads 1 --timeout 60 --log-level 'debug'
+CMD exec gunicorn --bind :$PORT yell_backend:app --workers 1 --threads 20 --timeout 60 --log-level 'debug'
