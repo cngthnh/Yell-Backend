@@ -26,6 +26,7 @@ CODE_TYPE_EMAIL = 0
 CODE_TYPE_CHANGE_PWD = 1
 MAX_VERIFICATION_TRIES = 3
 MAX_FILE_SIZE = 20971520 # 20MB
+TASK_ATTACHMENT_FOLDER = 'task_attachments'
 
 ## Messages ##
 INVALID_TOKEN_MESSAGE = 'INVALID_TOKEN' # None / can't be decrypt / fault signature tokens

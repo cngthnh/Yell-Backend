@@ -5,6 +5,7 @@ from botocore.client import Config
 import os
 from flask import copy_current_request_context
 import threading
+from definitions import TASK_ATTACHMENT_FOLDER
 
 
 class S3Handler(object):
@@ -26,7 +27,9 @@ class S3Handler(object):
     def upload(self, file_name, task_id, object_name):
 
         try:
-            self.client.upload_file(file_name, self.bucket_name, task_id + "/" + object_name, ExtraArgs={'CacheControl': 'no-cache'})
+            self.client.upload_file(file_name, self.bucket_name, 
+                                    "/".join([TASK_ATTACHMENT_FOLDER, task_id, object_name]), 
+                                    ExtraArgs={'CacheControl': 'no-cache'})
             
         except ClientError as e:
             logging.error(e)
@@ -35,7 +38,7 @@ class S3Handler(object):
         try:
             response = self.client.generate_presigned_url('get_object', 
                                                             Params={'Bucket': self.bucket_name,
-                                                            'Key': task_id + "/" + object_name},
+                                                            'Key': "/".join([TASK_ATTACHMENT_FOLDER, task_id, object_name])},
                                                             ExpiresIn=expiration)
         except ClientError as e:
             logging.error(e)
@@ -44,7 +47,8 @@ class S3Handler(object):
     
     def delete(self, task_id, object_name):
         try:
-            self.client.delete_object(Bucket=self.bucket_name, Key=task_id + "/" + object_name)
+            self.client.delete_object(Bucket=self.bucket_name, 
+                                    Key="/".join([TASK_ATTACHMENT_FOLDER, task_id, object_name]))
         except ClientError as e:
             logging.error(e)
             return False
