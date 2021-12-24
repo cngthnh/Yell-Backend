@@ -31,8 +31,11 @@ def createTransaction(uid):
     except Exception:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
 
+    currentBudget.balance += amount
+    if (currentBudget.balance < 0):
+        return getMessage(message=INSUFFICIENT_BALANCE_MESSAGE), 403
+
     try:
-        currentBudget.balance += amount
         currentBudget.transactions.append(transaction)
         db.session.add(currentBudget)
         db.session.commit()
@@ -88,6 +91,8 @@ def updateTransaction(uid):
         if API_AMOUNT in fields and data[API_AMOUNT] is not None:
             currentBudget.balance += int(data[API_AMOUNT]) - transaction.amount
             transaction.amount = int(data[API_AMOUNT])
+            if currentBudget.balance < 0:
+                return getMessage(message=INSUFFICIENT_BALANCE_MESSAGE), 403
     except Exception:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
     
