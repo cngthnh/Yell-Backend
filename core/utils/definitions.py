@@ -109,6 +109,8 @@ API_TOKEN_TYPE = 'token_type'
 API_CODE = 'code'
 API_DELETE_FILES = 'delete_files'
 API_FILES = 'files'
+API_FILE_NAME = 'file_name'
+API_URL = 'url'
 
 # Endpoints
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE

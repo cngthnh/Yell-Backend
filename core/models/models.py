@@ -172,7 +172,7 @@ class Task(db.Model):
         thisId = str(self.id)
         if self.files is not None:
             for file in self.files.split(','):
-                files.append({file: s3.getLink(thisId, file)})
+                files.append({API_FILE_NAME: file, API_URL: s3.getLink(thisId, file)})
 
         result = {
             API_NAME: self.name,
