@@ -198,17 +198,17 @@ class Budget(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     owner_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), nullable=False)
     name = db.Column(db.UnicodeText, nullable=False)
-    start_time = db.Column(db.DateTime, nullable=True)
-    end_time = db.Column(db.DateTime, nullable=True)
+    btype = db.Column(db.Integer, nullable=False)
     balance = db.Column(db.BigInteger, nullable=False)
     threshold = db.Column(db.BigInteger, nullable=True)
     transactions = db.relationship('Transaction', backref='budget', lazy=True, cascade='all, delete-orphan')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, owner_id, name, balance, start_time=None, end_time=None, threshold=None):
+    def __init__(self, owner_id, name, balance, btype, start_time=None, end_time=None, threshold=None):
         self.owner_id = owner_id
         self.name = name
+        self.btype = btype
         self.balance = balance
         if start_time is not None:
             self.start_time = start_time
@@ -226,9 +226,8 @@ class Budget(db.Model):
         result = {
             API_BUDGET_ID: str(self.id),
             API_NAME: self.name,
-            API_START_TIME: self.start_time.isoformat() if self.start_time is not None else None,
-            API_END_TIME: self.end_time.isoformat() if self.start_time is not None else None,
             API_BALANCE: self.balance,
+            API_TYPE: self.btype,
             API_THRESHOLD: self.threshold,
             API_TRANSACTIONS: transactionDetails,
             API_CREATED_AT: self.created_at.isoformat(),
@@ -241,9 +240,8 @@ class Budget(db.Model):
         result = {
             API_BUDGET_ID: str(self.id),
             API_NAME: self.name,
-            API_START_TIME: self.start_time.isoformat() if self.start_time is not None else None,
-            API_END_TIME: self.end_time.isoformat() if self.start_time is not None else None,
             API_BALANCE: self.balance,
+            API_TYPE: self.btype,
             API_THRESHOLD: self.threshold,
             API_TRANSACTIONS: [x.id for x in self.transactions],
             API_CREATED_AT: self.created_at.isoformat(),

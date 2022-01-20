@@ -13,20 +13,18 @@ def createBudget(uid):
         data = request.get_json()
         name = str(data[API_NAME])
         balance = int(data[API_BALANCE])
+        btype = int(data[API_TYPE])
     except Exception:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     budget = Budget(uid, 
                 name, 
-                balance)
+                balance,
+                btype)
     
     fields = data.keys()
 
     try:
-        if (API_START_TIME in fields and data[API_START_TIME] is not None):
-            budget.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
-        if (API_END_TIME in fields and data[API_END_TIME] is not None):
-            budget.end_time = datetime.fromisoformat(str(data[API_END_TIME]))
         if (API_THRESHOLD in fields and data[API_THRESHOLD] is not None):
             budget.threshold = datetime.fromisoformat(str(data[API_THRESHOLD]))
     except Exception:
@@ -82,10 +80,8 @@ def updateBudget(uid):
             budget.name = str(data[API_NAME])
         if API_BALANCE in fields and data[API_BALANCE] is not None:
             budget.balance = int(data[API_BALANCE])
-        if API_START_TIME in fields and data[API_START_TIME] is not None:
-            budget.start_time = datetime.fromisoformat(data[API_START_TIME])
-        if API_END_TIME in fields and data[API_END_TIME] is not None:
-            budget.end_time = datetime.fromisoformat(data[API_END_TIME])
+        if API_TYPE in fields and data[API_TYPE] is not None:
+            budget.btype = int(data[API_TYPE])
         if API_THRESHOLD in fields and data[API_THRESHOLD] is not None:
             budget.threshold = int(data[API_THRESHOLD])
     except Exception:

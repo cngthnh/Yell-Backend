@@ -111,6 +111,7 @@ API_DELETE_FILES = 'delete_files'
 API_FILES = 'files'
 API_FILE_NAME = 'file_name'
 API_URL = 'url'
+API_TYPE = 'type'
 
 # Endpoints
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE
