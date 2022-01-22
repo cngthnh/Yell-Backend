@@ -18,6 +18,10 @@ def createDashboard(uid):
 
     dashboard = Dashboard(_name)
     permission = DashboardPermission(dashboard, ADMIN_ROLE)
+    fields = data.keys()
+    
+    if API_DESCRIPTION in fields and data[API_DESCRIPTION] is not None:
+        dashboard.description = str(data[API_DESCRIPTION])
 
     currentUser = db.session.query(UserAccount).filter_by(id=uid).first()
     currentUser.dashboards.append(permission)
@@ -87,6 +91,8 @@ def updateDashboard(uid):
     
     if API_NAME in fields and data[API_NAME] is not None:
         dashboard.name = str(data[API_NAME])
+    if API_DESCRIPTION in fields and data[API_DESCRIPTION] is not None:
+        dashboard.description = str(data[API_DESCRIPTION])
     
     dashboard.updated_at = datetime.utcnow()
 
@@ -136,6 +142,8 @@ def grantDashboardPermission(uid):
             sys.stdout.flush()
             db.session.rollback()
             return getMessage(message=FAILED_MESSAGE), 400
+        
+        notification = Notification(_targetUserId, NOTIF_TYPE_UPDATED, UPDATED_NOTIF_TEXT.format(permissionCheck.dashboard.name, _role))
         return getMessage(message=SUCCEED_MESSAGE), 200
 
     dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
@@ -147,6 +155,16 @@ def grantDashboardPermission(uid):
 
     if (targetUser is None):
         return getMessage(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
+    
+    notification = Notification(targetUser.id, NOTIF_TYPE_INVITED, INVITE_NOTIF_TEXT.format(uid, dashboard.name, _role), dashboard.id, _role)
+
+    try:
+        db.session.add(notification)
+        db.session.commit()
+    except SQLAlchemyError:
+        sys.stdout.flush()
+        db.session.rollback()
+        return getMessage(message=FAILED_MESSAGE), 400
 
     sendDashboardInvitation(encode({API_UID: _targetUserId, 
                                     API_DASHBOARD_ID: _dashboardId, 
@@ -185,13 +203,13 @@ def removeDashboardPermission(uid):
         return getMessage(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
     
     targetUser.dashboards.remove(permissionCheck)
+    notification = Notification(targetUser.id, NOTIF_TYPE_DELETED, DELETED_NOTIF_TEXT.format(permissionCheck.dashboard.name))
 
     try:
         db.session.add(targetUser)
+        db.session.add(notification)
         db.session.commit()
     except SQLAlchemyError:
-        print(str(e))
-        sys.stdout.flush()
         db.session.rollback()
         return getMessage(message=FAILED_MESSAGE), 400
 
@@ -209,6 +227,7 @@ def confirmDashboardInvitation(token):
     try:
         dashboard = db.session.query(Dashboard).filter_by(id=tokenDict[API_DASHBOARD_ID]).first()
         user = db.session.query(UserAccount).filter_by(id=tokenDict[API_UID]).first()
+        otherUsers = db.session.query(DashboardPermission).filter_by(dashboard_id=tokenDict[API_DASHBOARD_ID])
         permission = DashboardPermission(dashboard, tokenDict[API_ROLE])
         permission.user_id = tokenDict[API_UID]
         user.dashboards.append(permission)
@@ -216,8 +235,14 @@ def confirmDashboardInvitation(token):
         print(str(e))
         sys.stdout.flush()
         return getMessage(message=INVALID_DATA_MESSAGE), 400
+
+    notifications = []
+    for u in otherUsers:
+        notification = Notification(u.user_id, NOTIF_TYPE_JOINED, JOINED_NOTIF_TEXT.format(user.id, dashboard.name))
+        notifications.append(notification)
     
     try:
+        db.session.bulk_save_objects(notifications)
         db.session.add(user)
         db.session.commit()
     except SQLAlchemyError as e:

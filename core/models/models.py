@@ -35,6 +35,7 @@ class UserAccount(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
     sessions = db.relationship('Session', backref='user', lazy=True, cascade='all, delete-orphan')
+    notifications = db.relationship('Notification', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def __init__(self, id, email, name, hash):
         self.id = id
@@ -86,17 +87,53 @@ class Session(db.Model):
     def __init__(self, user_id):
         self.user_id = user_id
 
+class Notification(db.Model):
+    __tablename__ = 'notification'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
+    user_id = db.Column(db.String(MAX_UID_LENGTH), db.ForeignKey('user_account.id'), nullable=False)
+    ntype = db.Column(db.Integer)
+    message = db.Column(db.UnicodeText)
+    dashboard_id = db.Column(UUID(as_uuid=True), nullable=True)
+    read = db.Column(db.Boolean, default=False)
+    role = db.Column(db.String)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __init__(self, user_id, ntype, message, dashboard_id = None, role = None):
+        self.user_id = user_id
+        self.ntype = ntype
+        self.message = message
+        if dashboard_id is not None:
+            self.dashboard_id = dashboard_id
+        if role is not None:
+            self.role = role
+    
+    def dict(self):
+        result = {
+            API_NOTIF_ID: self.id,
+            API_UID: self.user_id,
+            API_TYPE: self.ntype,
+            API_MESSAGE: self.message,
+            API_READ: self.read,
+            API_CREATED_AT: self.created_at.isoformat(),
+            API_UPDATED_AT: self.updated_at.isoformat()
+        }
+        return result
+
 class Dashboard(db.Model):
     __tablename__ = 'dashboard'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     name = db.Column(db.UnicodeText)
+    description = db.Column(db.UnicodeText, nullable=True)
     tasks = db.relationship('Task', lazy=True, backref='dashboard', cascade='all, delete-orphan')
     users = db.relationship('DashboardPermission', back_populates='dashboard', cascade='all, delete-orphan')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, name):
+    def __init__(self, name, description=None):
         self.name = name
+        if description is not None:
+            self.description = description
     
     def dict(self):
         taskDetails = []
@@ -106,6 +143,7 @@ class Dashboard(db.Model):
         result = {
             API_DASHBOARD_ID: str(self.id),
             API_NAME: self.name,
+            API_DESCRIPTION: self.description,
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat(),
             API_TASKS: taskDetails,
@@ -116,6 +154,7 @@ class Dashboard(db.Model):
         result = {
             API_DASHBOARD_ID: str(self.id),
             API_NAME: self.name,
+            API_DESCRIPTION: self.description,
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat(),
             API_TASKS: [x.id for x in self.tasks],

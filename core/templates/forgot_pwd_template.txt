@@ -1,0 +1,4 @@
+Hi {{ name }},
+We've received a request to change your password, use the code below to proceed! If it's not you, just ignore this email.
+Security Code: {{code}}
+The Yellion Team.

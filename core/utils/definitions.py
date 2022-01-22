@@ -3,6 +3,8 @@ YELL_ISSUER = 'Yell App by Yellion'
 EMAIL_VRF_TEMPLATE_HTML = 'email_verification_template.html'
 EMAIL_VRF_TEMPLATE_TXT = 'email_verification_template.txt'
 DASHBOARD_INV_TEMPLATE_TXT = 'dashboard_invitation_template.txt'
+FORGOT_PWD_TEMPLATE_TXT = 'forgot_pwd_template.txt'
+FORGOT_PWD_TEMPLATE_HTML = 'forgot_pwd_template.html'
 TEMP_FOLDER = 'tmp_files/'
 MAX_UID_LENGTH = 64
 VIEWER_ROLE = 'viewer'
@@ -27,6 +29,10 @@ CODE_TYPE_CHANGE_PWD = 1
 MAX_VERIFICATION_TRIES = 3
 MAX_FILE_SIZE = 20971520 # 20MB
 TASK_ATTACHMENT_FOLDER = 'task_attachments'
+NOTIF_TYPE_JOINED = 0
+NOTIF_TYPE_INVITED = 1
+NOTIF_TYPE_UPDATED = 2
+NOTIF_TYPE_DELETED = 3
 
 ## Messages ##
 INVALID_TOKEN_MESSAGE = 'INVALID_TOKEN' # None / can't be decrypt / fault signature tokens
@@ -41,7 +47,9 @@ INVALID_UID_MESSAGE = 'INVALID_UID' # uid contains unaccepted chars or used by a
 SUCCEED_MESSAGE = 'SUCCEED' # something done successfully
 FAILED_MESSAGE = 'FAILED' # something went wrong
 PENDING_VERIFICATION_MESSAGE = 'PENDING_VERIFICATION' # account needs to be verified by email
-EMAIL_VERIFICATION_TIME = 10 # 10 minutes
+PENDING_CONF_MESSAGE = 'PENDING_CONFIRMATION' # needs to be confirmed by email
+EMAIL_VERIFICATION_TIME = 30 # 30 minutes
+PWD_RESET_TIME = 30 # 30 minutes
 ACCESS_TOKEN_EXP_TIME = 30 # 30 minutes
 DEFAULT_EXPIRATION_TIME = 43800 # 1 month
 VERIFIED_MESSAGE = 'VERIFIED' # verified account
@@ -62,6 +70,7 @@ INVALID_REQUEST_MESSAGE = 'INVALID_REQUEST'
 EXPIRED_CODE_MESSAGE = 'EXPIRED_CODE'
 FILE_TOO_LARGE_MESSAGE = 'FILE_TOO_LARGE'
 INSUFFICIENT_BALANCE_MESSAGE = 'INSUFFICIENT_BALANCE'
+NO_NOTIF_MESSAGE = 'NO_NOTIFICATION'
 
 ## Key names ##
 ISSUER_KEY = 'iss'
@@ -112,6 +121,11 @@ API_FILES = 'files'
 API_FILE_NAME = 'file_name'
 API_URL = 'url'
 API_TYPE = 'type'
+API_DESCRIPTION = 'description'
+API_NOTIF_ID = 'notif_id'
+API_LIMIT = 'limit'
+API_MESSAGE = 'message'
+API_READ = 'read'
 
 # Endpoints
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE
@@ -122,9 +136,16 @@ DASHBOARDS_ENDPOINT = '/api/dashboards' # GET, POST, PATCH, DELETE
 DASHBOARD_INVITATION_SIGNATURE = '/api/dashboards/invitation/'
 BUDGETS_ENDPOINT = '/api/budgets' # GET, POST, PATCH, DELETE
 TRANSACTIONS_ENDPOINT = '/api/transactions' # GET, POST, PATCH, DELETE
+NOTIF_ENDPOINT = '/api/notifications' # GET, POST
 HOME_ENDPOINT = '/' # GET
 
 # regex
 REGEX_EMAIL = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
 REGEX_UID = r'^(?=[a-zA-Z0-9._]{6,64}$)(?!.*[_.]{2})[^_.].*[^_.]$'
 REGEX_HASH = r'[0-9a-f]{64}'
+
+# text
+INVITE_NOTIF_TEXT = 'Bạn đã được người dùng {} mời tham gia {} làm {}'
+JOINED_NOTIF_TEXT = 'Người dùng {} đã tham gia {}'
+DELETED_NOTIF_TEXT = 'Bạn đã đã bị xóa quyền truy cập khỏi {}'
+UPDATED_NOTIF_TEXT = 'Bạn đã được thay đổi quyền truy cập trong {} thành {}'

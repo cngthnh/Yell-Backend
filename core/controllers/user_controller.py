@@ -277,3 +277,115 @@ def resendVerificationEmail():
 
     sendVerificationEmail(user.email, encode({API_UID: _uid, API_EMAIL: user.email}, EMAIL_VERIFICATION_TIME), user.name, veriRecord.code)
     return getMessage(message=PENDING_VERIFICATION_MESSAGE), 200
+
+def forgotPassword():
+    try:
+        data = request.get_json()
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+
+    try:
+        _uid = str(data[API_UID])
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+
+    user = db.session.query(UserAccount).filter_by(id=_uid).first()
+    if (user is None):
+        return getMessage(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
+
+    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid, code_type=CODE_TYPE_CHANGE_PWD).first()
+    if (veriRecord is not None):
+        veriRecord.refresh()
+        veriRecord.tries = 0
+    else:
+        veriRecord = VerificationCode(_uid, CODE_TYPE_CHANGE_PWD)
+
+    try:
+        db.session.add(veriRecord)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(str(e))
+        sys.stdout.flush()
+        return getMessage(message=FAILED_MESSAGE), 400
+    
+    sendPasswordChangeRequest(user.email, user.name, veriRecord.code)
+
+    return getMessage(message=PENDING_VERIFICATION_MESSAGE), 200
+
+def checkPwdChangeCode(_uid, _code):
+    if (not re.fullmatch(REGEX_UID, _uid)):
+        return False
+
+    veriRecord = db.session.query(VerificationCode).filter_by(user_id=_uid, code_type=CODE_TYPE_CHANGE_PWD).first()
+    if (veriRecord is None):
+        return False
+
+    if (_code == veriRecord.code):
+        if (datetime.utcnow() - veriRecord.updated_at > timedelta(minutes=PWD_RESET_TIME)):
+            try:
+                db.session.delete(veriRecord)
+                db.session.commit()
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                print(str(e))
+                sys.stdout.flush()
+            return False
+        return True
+
+    veriRecord.tries += 1
+    # code is not valid
+    if (veriRecord.tries >= MAX_VERIFICATION_TRIES): # tried too many times
+        try:
+            db.session.delete(veriRecord)
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(str(e))
+            sys.stdout.flush()
+    return False
+
+def passwordChangeCodeCheck():
+    try:
+        data = request.get_json()
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+
+    try:
+        _uid = str(data[API_UID])
+        _code = str(data[API_CODE])
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+    
+    if (checkPwdChangeCode(_uid, _code)):
+        return getMessage(message=OK_MESSAGE), 200
+
+    return getMessage(message=INVALID_DATA_MESSAGE), 401
+
+def changePasswordByCode():
+    try:
+        data = request.get_json()
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+
+    try:
+        _uid = str(data[API_UID])
+        _code = str(data[API_CODE])
+        _hash = str(data[API_HASH])
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+    
+    if (checkPwdChangeCode(_uid, _code)):
+        try:
+            user = db.session.query(UserAccount).filter_by(id=_uid).first()
+            user.hash = _hash
+            db.session.add(user)
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(str(e))
+            sys.stdout.flush()
+            return getMessage(message=FAILED_MESSAGE), 400
+        return getMessage(message=OK_MESSAGE), 200
+    
+    return getMessage(message=INVALID_DATA_MESSAGE), 401
