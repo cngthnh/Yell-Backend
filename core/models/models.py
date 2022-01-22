@@ -55,7 +55,7 @@ class UserAccount(db.Model):
             budgetDetails.append(budget.dict())
 
         result = {
-            API_UID: self.id,
+            API_UID: str(self.id),
             API_EMAIL: self.email,
             API_NAME: self.name,
             API_DASHBOARDS: dashboardDetails,
@@ -67,11 +67,11 @@ class UserAccount(db.Model):
     
     def compactDict(self):
         result = {
-            API_UID: self.id,
+            API_UID: str(self.id),
             API_EMAIL: self.email,
             API_NAME: self.name,
-            API_DASHBOARDS: [x.dashboard_id for x in self.dashboards],
-            API_BUDGETS: [x.id for x in self.budgets],
+            API_DASHBOARDS: [str(x.id) for x in self.dashboards],
+            API_BUDGETS: [str(x.id) for x in self.budgets],
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
         }
@@ -110,8 +110,8 @@ class Notification(db.Model):
     
     def dict(self):
         result = {
-            API_NOTIF_ID: self.id,
-            API_UID: self.user_id,
+            API_NOTIF_ID: str(self.id),
+            API_UID: str(self.user_id),
             API_TYPE: self.ntype,
             API_MESSAGE: self.message,
             API_READ: self.read,
@@ -157,7 +157,7 @@ class Dashboard(db.Model):
             API_DESCRIPTION: self.description,
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat(),
-            API_TASKS: [x.id for x in self.tasks],
+            API_TASKS: [str(x.id) for x in self.tasks],
         }
         return result
 
@@ -282,7 +282,7 @@ class Budget(db.Model):
             API_BALANCE: self.balance,
             API_TYPE: self.btype,
             API_THRESHOLD: self.threshold,
-            API_TRANSACTIONS: [x.id for x in self.transactions],
+            API_TRANSACTIONS: [str(x.id) for x in self.transactions],
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
         }

@@ -65,7 +65,9 @@ def createTask(uid):
         if (API_PRIORITY in fields and data[API_PRIORITY] is not None):
             task.priority = int(data[API_PRIORITY])
         if (API_PARENT_ID in fields and data[API_PARENT_ID] is not None):
-            task.parent_id = str(data[API_PARENT_ID])
+            parent = db.session.query(Task).filter_by(id=str(data[API_PARENT_ID])).first()
+            if parent is not None:
+                task.parent_id = str(data[API_PARENT_ID])
         if (API_START_TIME in fields and data[API_START_TIME] is not None):
             task.start_time = datetime.fromisoformat(str(data[API_START_TIME]))
         if (API_END_TIME in fields and data[API_END_TIME] is not None):
@@ -139,7 +141,9 @@ def updateTask(uid):
         if API_PRIORITY in fields and data[API_PRIORITY] is not None:
             task.priority = int(data[API_PRIORITY])
         if API_PARENT_ID in fields and data[API_PARENT_ID] is not None:
-            task.parent_id = str(data[API_PARENT_ID])
+            parent = db.session.query(Task).filter_by(id=str(data[API_PARENT_ID])).first()
+            if parent is not None:
+                task.parent_id = str(data[API_PARENT_ID])
         if API_START_TIME in fields and data[API_START_TIME] is not None:
             task.start_time = datetime.fromisoformat(data[API_START_TIME])
         if API_END_TIME in fields and data[API_END_TIME] is not None:
