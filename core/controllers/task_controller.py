@@ -17,7 +17,9 @@ def createTask(uid):
         data = json.loads(request.form['data'])
         _name = str(data[API_NAME])
         _dashboardId = str(data[API_DASHBOARD_ID])
-    except Exception:
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
         return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     permissionCheck = db.session.query(DashboardPermission). \
@@ -76,15 +78,19 @@ def createTask(uid):
             task.labels = str(data[API_LABELS])
         if (API_CONTENT in fields and data[API_CONTENT] is not None):
             task.content = str(data[API_CONTENT])
-    except Exception:
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
         return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     try:
         currentDashboard.tasks.append(task)
         db.session.add(currentDashboard)
         db.session.commit()
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
         db.session.rollback()
+        print(str(e))
+        sys.stdout.flush()
         return getMessage(message=FAILED_MESSAGE), 400
     
     return getMessage(message=SUCCEED_MESSAGE, task_id=str(task.id)), 201
