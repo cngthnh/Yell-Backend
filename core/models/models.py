@@ -70,7 +70,7 @@ class UserAccount(db.Model):
             API_UID: str(self.id),
             API_EMAIL: self.email,
             API_NAME: self.name,
-            API_DASHBOARDS: [str(x.id) for x in self.dashboards],
+            API_DASHBOARDS: [str(x.dashboard_id) for x in self.dashboards],
             API_BUDGETS: [str(x.id) for x in self.budgets],
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
@@ -111,7 +111,6 @@ class Notification(db.Model):
     def dict(self):
         result = {
             API_NOTIF_ID: str(self.id),
-            API_UID: str(self.user_id),
             API_TYPE: self.ntype,
             API_MESSAGE: self.message,
             API_READ: self.read,
