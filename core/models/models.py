@@ -138,6 +138,10 @@ class Dashboard(db.Model):
         taskDetails = []
         for task in self.tasks:
             taskDetails.append(task.dict())
+
+        users = []
+        for user in self.users:
+            users.append({API_UID: user.user_id, API_ROLE: user.role})
         
         result = {
             API_DASHBOARD_ID: str(self.id),
@@ -146,10 +150,15 @@ class Dashboard(db.Model):
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat(),
             API_TASKS: taskDetails,
+            API_USERS: users
         }
         return result
     
     def compactDict(self):
+        users = []
+        for user in self.users:
+            users.append({API_UID: user.user_id, API_ROLE: user.role})
+
         result = {
             API_DASHBOARD_ID: str(self.id),
             API_NAME: self.name,
@@ -157,6 +166,7 @@ class Dashboard(db.Model):
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat(),
             API_TASKS: [str(x.id) for x in self.tasks],
+            API_USERS: users
         }
         return result
 

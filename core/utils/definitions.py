@@ -126,6 +126,7 @@ API_NOTIF_ID = 'notif_id'
 API_LIMIT = 'limit'
 API_MESSAGE = 'message'
 API_READ = 'read'
+API_USERS = 'users'
 
 # Endpoints
 USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE
