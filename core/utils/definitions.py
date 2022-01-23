@@ -137,7 +137,7 @@ DASHBOARDS_ENDPOINT = '/api/dashboards' # GET, POST, PATCH, DELETE
 DASHBOARD_INVITATION_SIGNATURE = '/api/dashboards/invitation/'
 BUDGETS_ENDPOINT = '/api/budgets' # GET, POST, PATCH, DELETE
 TRANSACTIONS_ENDPOINT = '/api/transactions' # GET, POST, PATCH, DELETE
-NOTIF_ENDPOINT = '/api/notifications' # GET, POST
+NOTIF_ENDPOINT = '/api/notifications' # GET, POST, PATCH
 HOME_ENDPOINT = '/' # GET
 
 # regex
