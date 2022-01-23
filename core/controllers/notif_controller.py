@@ -21,7 +21,7 @@ def getNotifications(uid):
     
     return parseNotifications(notifications), 200
     
-
+@tokenRequired
 def confirmNotification(uid):
     try:
         data = request.get_json()
@@ -38,6 +38,9 @@ def confirmNotification(uid):
 
     if notification.user_id != uid:
         return getMessage(message=FORBIDDEN_MESSAGE), 403
+
+    if notification.role not in DASHBOARD_ROLES:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     try:
         dashboard = db.session.query(Dashboard).filter_by(id=notification.dashboard_id).first()
@@ -46,6 +49,8 @@ def confirmNotification(uid):
         permission = DashboardPermission(dashboard, notification.role)
         permission.user_id = notification.user_id
         user.dashboards.append(permission)
+        notification.role = None
+        notification.updated_at = datetime.utcnow()
     except SQLAlchemyError as e:
         print(str(e))
         sys.stdout.flush()
@@ -53,12 +58,46 @@ def confirmNotification(uid):
 
     notifications = []
     for u in otherUsers:
-        notification = Notification(u.user_id, NOTIF_TYPE_JOINED, JOINED_NOTIF_TEXT.format(user.id, dashboard.name))
-        notifications.append(notification)
+        notif = Notification(u.user_id, NOTIF_TYPE_JOINED, JOINED_NOTIF_TEXT.format(user.id, dashboard.name))
+        notifications.append(notif)
     
     try:
         db.session.bulk_save_objects(notifications)
         db.session.add(user)
+        db.session.add(notification)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
+        return getMessage(message=FAILED_MESSAGE), 400
+    
+    return getMessage(message=SUCCEED_MESSAGE), 200
+
+@tokenRequired
+def rejectNotification(uid):
+    try:
+        data = request.get_json()
+        _notifId = data[API_NOTIF_ID]
+    except Exception:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+    
+    notification = db.session.query(Notification).filter_by(id=_notifId).first()
+    if notification is None:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+    
+    if notification.ntype != NOTIF_TYPE_INVITED:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+
+    if notification.user_id != uid:
+        return getMessage(message=FORBIDDEN_MESSAGE), 403
+
+    if notification.role is None:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+    
+    notification.role = None
+    try:
+        db.session.add(notification)
         db.session.commit()
     except SQLAlchemyError as e:
         print(str(e))
@@ -81,6 +120,7 @@ def changeReadStatus(uid, notifId, status):
         return getMessage(message=FORBIDDEN_MESSAGE), 403
     
     notification.read = status
+    notification.updated_at = datetime.utcnow()
     
     try:
         db.session.add(notification)
@@ -93,6 +133,7 @@ def changeReadStatus(uid, notifId, status):
     
     return getMessage(message=SUCCEED_MESSAGE), 200
 
+@tokenRequired
 def markAsRead(uid):
     try:
         data = request.get_json()
@@ -102,7 +143,7 @@ def markAsRead(uid):
     
     return changeReadStatus(uid, _notifId, True)
     
-
+@tokenRequired
 def markAsUnread(uid):
     try:
         data = request.get_json()

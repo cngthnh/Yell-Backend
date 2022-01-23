@@ -114,6 +114,7 @@ class Notification(db.Model):
             API_TYPE: self.ntype,
             API_MESSAGE: self.message,
             API_READ: self.read,
+            API_ROLE: self.role,
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
         }
