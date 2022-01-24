@@ -101,7 +101,9 @@ def updateTask(uid):
         files = request.files
         data = json.loads(request.form['data'])
         _taskId = str(data[API_TASK_ID])
-    except Exception:
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
         return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     task = db.session.query(Task).filter(Task.id==_taskId).first()
@@ -173,7 +175,9 @@ def updateTask(uid):
                 s3.delete(str(task.id), file)
                 task.files.replace(file, '')
                 task.files.replace(',,')
-    except Exception:
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
         return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     task.updated_at = datetime.utcnow()
