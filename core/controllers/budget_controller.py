@@ -26,7 +26,7 @@ def createBudget(uid):
 
     try:
         if (API_THRESHOLD in fields and data[API_THRESHOLD] is not None):
-            budget.threshold = datetime.fromisoformat(str(data[API_THRESHOLD]))
+            budget.threshold = int(data[API_THRESHOLD])
     except Exception:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
 
