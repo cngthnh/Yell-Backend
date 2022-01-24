@@ -155,8 +155,6 @@ def updateTask(uid):
         if API_START_TIME in fields and data[API_START_TIME] is not None:
             task.start_time = datetime.fromisoformat(data[API_START_TIME])
         if API_END_TIME in fields and data[API_END_TIME] is not None:
-            print(str(data[API_END_TIME]))
-            sys.stdout.flush()
             task.end_time = datetime.fromisoformat(data[API_END_TIME])
         if API_LABELS in fields and data[API_LABELS] is not None:
             task.labels = str(data[API_LABELS])
