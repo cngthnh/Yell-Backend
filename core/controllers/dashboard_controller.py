@@ -156,7 +156,7 @@ def grantDashboardPermission(uid):
     if (targetUser is None):
         return getMessage(message=USER_DOES_NOT_EXISTS_MESSAGE), 404
     
-    notification = db.session.query(Notification).filter_by(user_id=_targetUserId, type=NOTIF_TYPE_INVITED, dashboard_id = dashboard.id).first()
+    notification = db.session.query(Notification).filter_by(user_id=_targetUserId, ntype=NOTIF_TYPE_INVITED, dashboard_id = dashboard.id).first()
 
     if (notification is not None):
         notification.message = INVITE_NOTIF_TEXT.format(uid, dashboard.name, _role)
