@@ -26,8 +26,8 @@ def createTransaction(uid):
     try:
         if (API_PURPOSES in fields and data[API_PURPOSES] is not None):
             transaction.purposes = str(data[API_PURPOSES])
-        if (API_TIME in fields and data[API_TIME] is not None):
-            transaction.time = datetime.fromisoformat(str(data[API_TIME]))
+        if (API_CONTENT in fields and data[API_CONTENT] is not None):
+            transaction.content = str(data[API_CONTENT])
     except Exception:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
 
@@ -86,8 +86,8 @@ def updateTransaction(uid):
         fields = data.keys()
         if API_PURPOSES in fields and data[API_PURPOSES] is not None:
             transaction.purposes = str(data[API_PURPOSES])
-        if API_TIME in fields and data[API_TIME] is not None:
-            transaction.time = datetime.fromisoformat(data[API_TIME])
+        if API_CONTENT in fields and data[API_CONTENT] is not None:
+            transaction.content = str(data[API_CONTENT])
         if API_AMOUNT in fields and data[API_AMOUNT] is not None:
             currentBudget.balance += int(data[API_AMOUNT]) - transaction.amount
             transaction.amount = int(data[API_AMOUNT])

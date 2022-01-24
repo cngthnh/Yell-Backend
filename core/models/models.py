@@ -303,25 +303,25 @@ class Transaction(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     budget_id = db.Column(UUID(as_uuid=True), db.ForeignKey('budget.id'), nullable=False)
     purposes = db.Column(db.UnicodeText, nullable=True)
-    time = db.Column(db.DateTime, nullable=True)
+    content = db.Column(db.UnicodeText, nullable=True)
     amount = db.Column(db.BigInteger, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, budget_id, amount, purposes=None, time=None):
+    def __init__(self, budget_id, amount, purposes=None, time=None, content=None):
         self.budget_id = budget_id
         self.amount = amount
         if purposes is not None:
             self.purposes = purposes
-        if time is not None:
-            self.time = time
+        if content is not None:
+            self.content = content
     
     def dict(self):
         result = {
             API_TRANSACTION_ID: str(self.id),
             API_BUDGET_ID: str(self.budget_id),
             API_PURPOSES: self.purposes,
-            API_TIME: self.time,
+            API_CONTENT: self.content,
             API_AMOUNT: self.amount,
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
