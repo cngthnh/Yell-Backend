@@ -239,8 +239,10 @@ def deleteTask(uid):
         return getMessage(message=FORBIDDEN_MESSAGE), 403
 
     s3 = S3Handler()
-    for file in task.files.split(','):
-        s3.delete(str(task.id), file)
+    
+    if task.files is not None:
+        for file in task.files.split(','):
+            s3.delete(str(task.id), file)
 
     try:
         db.session.delete(task)
