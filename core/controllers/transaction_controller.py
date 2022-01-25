@@ -114,7 +114,10 @@ def deleteTransaction(uid):
     try:
         data = request.get_json()
         transactionId = str(data[API_TRANSACTION_ID])
-    except Exception:
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
         return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
