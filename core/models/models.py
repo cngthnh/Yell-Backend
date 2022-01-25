@@ -70,8 +70,8 @@ class UserAccount(db.Model):
             API_UID: str(self.id),
             API_EMAIL: self.email,
             API_NAME: self.name,
-            API_DASHBOARDS: [str(x.dashboard_id) for x in self.dashboards],
-            API_BUDGETS: [str(x.id) for x in self.budgets],
+            API_DASHBOARDS: [{API_DASHBOARD_ID: str(x.dashboard_id)} for x in self.dashboards],
+            API_BUDGETS: [{API_BUDGET_ID: str(x.id)} for x in self.budgets],
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
         }
@@ -166,7 +166,7 @@ class Dashboard(db.Model):
             API_DESCRIPTION: self.description,
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat(),
-            API_TASKS: [str(x.id) for x in self.tasks],
+            API_TASKS: [{API_TASK_ID: str(x.id)} for x in self.tasks],
             API_USERS: users
         }
         return result
@@ -292,7 +292,7 @@ class Budget(db.Model):
             API_BALANCE: self.balance,
             API_TYPE: self.btype,
             API_THRESHOLD: self.threshold,
-            API_TRANSACTIONS: [str(x.id) for x in self.transactions],
+            API_TRANSACTIONS: [{API_TRANSACTION_ID: str(x.id)} for x in self.transactions],
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
         }
