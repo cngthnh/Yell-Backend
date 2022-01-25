@@ -117,7 +117,6 @@ def deleteTransaction(uid):
     except Exception as e:
         print(str(e))
         sys.stdout.flush()
-        db.session.rollback()
         return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     transaction = db.session.query(Transaction).filter_by(id=transactionId).first()
