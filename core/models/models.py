@@ -71,7 +71,7 @@ class UserAccount(db.Model):
             API_EMAIL: self.email,
             API_NAME: self.name,
             API_DASHBOARDS: [str(x.dashboard_id) for x in self.dashboards],
-            API_BUDGETS: [{API_BUDGET_ID: str(x.id)} for x in self.budgets],
+            API_BUDGETS: [str(x.id) for x in self.budgets],
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
         }
@@ -292,7 +292,7 @@ class Budget(db.Model):
             API_BALANCE: self.balance,
             API_TYPE: self.btype,
             API_THRESHOLD: self.threshold,
-            API_TRANSACTIONS: [{API_TRANSACTION_ID: str(x.id)} for x in self.transactions],
+            API_TRANSACTIONS: [str(x.id) for x in self.transactions],
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat()
         }
