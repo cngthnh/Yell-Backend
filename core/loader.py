@@ -31,10 +31,23 @@ def loadUrl():
     except Exception:
         pass
 
+def loadStorage():
+    try:
+        os.environ['AWS_ACCESS_KEY'] = (open('aws_access', 'r').readline()).strip()
+        os.remove('aws_access')
+        os.environ['AWS_SECRET_ACCESS_KEY'] = (open('aws_secret', 'r').readline()).strip()
+        os.remove('aws_secret')
+        os.environ['AWS_S3_BUCKET_NAME'] = (open('aws_s3_bucket', 'r').readline()).strip()
+        os.remove('aws_s3_bucket')
+        os.mkdir(TEMP_FOLDER)
+    except Exception:
+        pass
+
 def loadConfigs():
     loadEmailConfigs()
     loadKeys()
     loadUrl()
+    loadStorage()
 
 # init Flask
 app = Flask(__name__)
@@ -53,7 +66,7 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
-# app.config['DEBUG'] = True
+app.config['DEBUG'] = True
 
 # init DB
 db = SQLAlchemy(app)

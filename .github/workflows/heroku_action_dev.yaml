@@ -19,12 +19,18 @@ jobs:
         YELL_MAIL_USERNAME: ${{ secrets.YELL_MAIL_USERNAME }}
         YELL_MAIL_PASSWORD: ${{ secrets.YELL_MAIL_PASSWORD }}
         YELL_MAIN_URL: ${{ secrets.YELL_MAIN_URL_DEV }}
+        AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
+        AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         echo "$YELL_SIG_KEY" > sig
         echo "$YELL_ENC_KEY" > enc
         echo "$YELL_MAIL_USERNAME" > mail_username
         echo "$YELL_MAIL_PASSWORD" > mail_password
         echo "$YELL_MAIN_URL" > main_url
+        echo "$AWS_ACCESS_KEY" > aws_access
+        echo "$AWS_SECRET_ACCESS_KEY" > aws_secret
+        echo "$AWS_S3_BUCKET_NAME" > aws_s3_bucket
 
     # Login
     - name: Heroku Login
