@@ -48,8 +48,8 @@ class UserAccount(db.Model):
         dashboardDetails = []
         budgetDetails = []
 
-        for dashboard in self.dashboards:
-            dashboardDetails.append(dashboard.dict())
+        for dp in self.dashboards:
+            dashboardDetails.append(dp.dashboard.dict())
 
         for budget in self.budgets:
             budgetDetails.append(budget.dict())
