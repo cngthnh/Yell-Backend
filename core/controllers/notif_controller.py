@@ -36,7 +36,7 @@ def confirmNotification(uid):
     if notification.user_id is None or notification.dashboard_id is None:
         try:
             db.session.delete(notification)
-            db.commit()
+            db.session.commit()
         except SQLAlchemyError as e:
             print(str(e))
             sys.stdout.flush()
@@ -59,7 +59,7 @@ def confirmNotification(uid):
         if (dashboard is None or user is None):
             try:
                 db.session.delete(notification)
-                db.commit()
+                db.session.commit()
             except SQLAlchemyError as e:
                 print(str(e))
                 sys.stdout.flush()
