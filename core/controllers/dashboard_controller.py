@@ -279,11 +279,13 @@ def deleteDashboard(uid):
     
     dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
     permissions = db.session.query(DashboardPermission).filter_by(dashboard_id=_dashboardId)
+    notifs = db.session.query(Notification).filter_by(dashboard_id=_dashboardId)
 
     if (dashboard is None):
         return getMessage(message=FORBIDDEN_MESSAGE), 400
 
     try:
+        db.session.delete(notifs)
         db.session.delete(permissions)
         db.session.delete(dashboard)
         db.session.commit()
