@@ -9,7 +9,7 @@ from ..utils.definitions import NOTIF_TYPE_INVITED
 
 @tokenRequired
 def getNotifications(uid):
-    limit = int(request.args.get(API_LIMIT, 0, type=int))
+    limit = int(request.args.get(API_LIMIT, 0, type=int)) 
 
     if limit != 0:
         notifications = db.session.query(Notification).filter_by(user_id=uid).limit(limit).all()
