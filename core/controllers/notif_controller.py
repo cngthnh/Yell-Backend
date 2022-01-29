@@ -26,13 +26,22 @@ def confirmNotification(uid):
     try:
         data = request.get_json()
         _notifId = data[API_NOTIF_ID]
-        print(_notifId)
-        sys.stdout.flush()
     except Exception:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     notification = db.session.query(Notification).filter_by(id=_notifId).first()
     if notification is None:
+        return getMessage(message=INVALID_DATA_MESSAGE), 400
+    
+    if notification.user_id is None or notification.dashboard_id is None:
+        try:
+            db.session.delete(notification)
+            db.commit()
+        except SQLAlchemyError as e:
+            print(str(e))
+            sys.stdout.flush()
+            db.session.rollback()
+            return getMessage(message=FAILED_MESSAGE), 400
         return getMessage(message=INVALID_DATA_MESSAGE), 400
     
     if notification.ntype != NOTIF_TYPE_INVITED:
