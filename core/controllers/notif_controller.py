@@ -42,7 +42,7 @@ def confirmNotification(uid):
             sys.stdout.flush()
             db.session.rollback()
             return getMessage(message=FAILED_MESSAGE), 400
-        return getMessage(message=INVALID_DATA_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400 
     
     if notification.ntype != NOTIF_TYPE_INVITED:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
