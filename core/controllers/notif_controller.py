@@ -26,6 +26,8 @@ def confirmNotification(uid):
     try:
         data = request.get_json()
         _notifId = data[API_NOTIF_ID]
+        print(_notifId)
+        sys.stdout.flush()
     except Exception:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
     
