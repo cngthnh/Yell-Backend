@@ -278,13 +278,12 @@ def deleteDashboard(uid):
         return getMessage(message=FORBIDDEN_MESSAGE), 403
     
     dashboard = db.session.query(Dashboard).filter_by(id=_dashboardId).first()
-    notifs = db.session.query(Notification).filter_by(dashboard_id=_dashboardId)
 
     if (dashboard is None):
         return getMessage(message=FORBIDDEN_MESSAGE), 400
 
     try:
-        db.session.delete(notifs)
+        db.session.query(Notification).filter_by(dashboard_id=_dashboardId).delete()
         db.session.delete(dashboard)
         db.session.commit()
     except SQLAlchemyError as e:
