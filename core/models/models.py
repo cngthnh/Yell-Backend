@@ -238,7 +238,7 @@ class Task(db.Model):
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat(),
             API_FILES: files,
-            API_PARENT_ID: str(self.parent_id)
+            API_PARENT_ID: str(self.parent_id) if self.parent_id is not None else None,
         }
         return result
 
