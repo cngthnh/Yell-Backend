@@ -17,6 +17,8 @@ def createTask(uid):
         data = json.loads(request.form['data'])
         _name = str(data[API_NAME])
         _dashboardId = str(data[API_DASHBOARD_ID])
+        print('DEBUG: ' + str(data[API_PARENT_ID]))
+        sys.stdout.flush()
     except Exception as e:
         print(str(e))
         sys.stdout.flush()
