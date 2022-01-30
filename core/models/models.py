@@ -48,8 +48,8 @@ class UserAccount(db.Model):
         dashboardDetails = []
         budgetDetails = []
 
-        for dashboard in self.dashboards:
-            dashboardDetails.append(dashboard.dict())
+        for dp in self.dashboards:
+            dashboardDetails.append(dp.dashboard.dict())
 
         for budget in self.budgets:
             budgetDetails.append(budget.dict())
@@ -237,7 +237,8 @@ class Task(db.Model):
             API_LABELS: self.labels,
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat(),
-            API_FILES: files
+            API_FILES: files,
+            API_PARENT_ID: str(self.parent_id) if self.parent_id is not None else None,
         }
         return result
 

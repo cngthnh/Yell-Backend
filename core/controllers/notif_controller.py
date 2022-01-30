@@ -9,7 +9,7 @@ from ..utils.definitions import NOTIF_TYPE_INVITED
 
 @tokenRequired
 def getNotifications(uid):
-    limit = int(request.args.get(API_LIMIT, 0, type=int))
+    limit = int(request.args.get(API_LIMIT, 0, type=int)) 
 
     if limit != 0:
         notifications = db.session.query(Notification).filter_by(user_id=uid).limit(limit).all()
@@ -33,6 +33,17 @@ def confirmNotification(uid):
     if notification is None:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
     
+    if notification.user_id is None or notification.dashboard_id is None:
+        try:
+            db.session.delete(notification)
+            db.session.commit()
+        except SQLAlchemyError as e:
+            print(str(e))
+            sys.stdout.flush()
+            db.session.rollback()
+            return getMessage(message=FAILED_MESSAGE), 400
+        return getMessage(message=INVALID_DATA_MESSAGE), 400 
+    
     if notification.ntype != NOTIF_TYPE_INVITED:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
 
@@ -45,6 +56,16 @@ def confirmNotification(uid):
     try:
         dashboard = db.session.query(Dashboard).filter_by(id=notification.dashboard_id).first()
         user = db.session.query(UserAccount).filter_by(id=notification.user_id).first()
+        if (dashboard is None or user is None):
+            try:
+                db.session.delete(notification)
+                db.session.commit()
+            except SQLAlchemyError as e:
+                print(str(e))
+                sys.stdout.flush()
+                db.session.rollback()
+                return getMessage(message=FAILED_MESSAGE), 400
+            return getMessage(message=INVALID_DATA_MESSAGE), 400 
         otherUsers = db.session.query(DashboardPermission).filter_by(dashboard_id=notification.dashboard_id)
         permission = DashboardPermission(dashboard, notification.role)
         permission.user_id = notification.user_id
