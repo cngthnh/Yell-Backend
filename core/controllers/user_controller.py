@@ -106,6 +106,8 @@ def updateAccount(uid):
         if (API_NAME in fields and data[API_NAME] is not None):
             user.name = str(data[API_NAME])
         if (API_HASH in fields and data[API_HASH] is not None):
+            if (API_OLD_HASH not in fields or data[API_OLD_HASH] is None or user.hash != data[API_OLD_HASH]):
+                return getMessage(message=INVALID_HASH_MESSAGE), 400
             user.hash = str(data[API_HASH])
             if (not re.fullmatch(REGEX_HASH, user.hash)):
                 return getMessage(message=INVALID_HASH_MESSAGE), 400

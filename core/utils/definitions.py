@@ -82,6 +82,7 @@ NOT_BEFORE_KEY = 'nbf'
 ## Definitions for API key names ##
 API_TOKEN = 'token'
 API_UID = 'uid'
+API_OLD_HASH = 'old_hash'
 API_HASH = 'hash'
 API_EMAIL = 'email'
 API_NAME = 'name'
