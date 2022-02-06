@@ -133,9 +133,6 @@ def changeReadStatus(uid, notifId, status):
     notification = db.session.query(Notification).filter_by(id=notifId).first()
     if notification is None:
         return getMessage(message=INVALID_DATA_MESSAGE), 400
-    
-    if notification.ntype != NOTIF_TYPE_INVITED:
-        return getMessage(message=INVALID_DATA_MESSAGE), 400
 
     if notification.user_id != uid:
         return getMessage(message=FORBIDDEN_MESSAGE), 403
