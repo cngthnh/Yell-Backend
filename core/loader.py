@@ -54,7 +54,7 @@ app = Flask(__name__)
 Talisman(app)
 
 # load env
-loadConfigs()
+# loadConfigs()
 
 # init SQL database and email connection
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres', 'postgresql+psycopg2')
