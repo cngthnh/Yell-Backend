@@ -130,15 +130,15 @@ API_READ = 'read'
 API_USERS = 'users'
 
 # Endpoints
-USERS_ENDPOINT = '/api/users' # GET, POST, PATCH, DELETE
-EMAIL_VRF_SIGNATURE = '/api/users/verify/'
-AUTH_ENDPOINT = '/api/auth' # GET, POST, DELETE
-TASKS_ENDPOINT = '/api/tasks' # GET, POST, PATCH, DELETE
-DASHBOARDS_ENDPOINT = '/api/dashboards' # GET, POST, PATCH, DELETE
-DASHBOARD_INVITATION_SIGNATURE = '/api/dashboards/invitation/'
-BUDGETS_ENDPOINT = '/api/budgets' # GET, POST, PATCH, DELETE
-TRANSACTIONS_ENDPOINT = '/api/transactions' # GET, POST, PATCH, DELETE
-NOTIF_ENDPOINT = '/api/notifications' # GET, POST, PATCH
+USERS_ENDPOINT = '/users' # GET, POST, PATCH, DELETE
+EMAIL_VRF_SIGNATURE = '/users/verify/'
+AUTH_ENDPOINT = '/auth' # GET, POST, DELETE
+TASKS_ENDPOINT = '/tasks' # GET, POST, PATCH, DELETE
+DASHBOARDS_ENDPOINT = '/dashboards' # GET, POST, PATCH, DELETE
+DASHBOARD_INVITATION_SIGNATURE = '/dashboards/invitation/'
+BUDGETS_ENDPOINT = '/budgets' # GET, POST, PATCH, DELETE
+TRANSACTIONS_ENDPOINT = '/transactions' # GET, POST, PATCH, DELETE
+NOTIF_ENDPOINT = '/notifications' # GET, POST, PATCH
 HOME_ENDPOINT = '/' # GET
 
 # regex
