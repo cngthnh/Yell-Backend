@@ -5,6 +5,8 @@ from .utils.email import mail
 import secrets
 from flask_sqlalchemy import SQLAlchemy
 from flask_talisman import Talisman
+import requests
+import time
 
 def loadKeys():
     try:
@@ -70,6 +72,13 @@ app.config['DEBUG'] = True
 
 # init DB
 db = SQLAlchemy(app)
+
+def heartbeater():
+    for i in range(HEARTBEAT_RETRIES):
+        response = requests.post(os.environ['SERVICE_DISCOVERY_URL'], data = {"name": "Yell API Service", "url": os.environ['YELL_MAIN_URL']})
+        if response.ok:
+            break
+    time.sleep(HEARTBEAT_INTERVAL)
 
 with app.app_context():
     mail.init_app(app)
