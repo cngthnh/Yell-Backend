@@ -78,7 +78,6 @@ def heartbeater():
         while (True):
             for _ in range(HEARTBEAT_RETRIES):
                 response = requests.post(os.environ['SERVICE_DISCOVERY_URL'], data = {"name": "Yell API Service", "url": os.environ['YELL_MAIN_URL']})
-                print(response)
                 if response.ok:
                     break
             time.sleep(HEARTBEAT_INTERVAL)

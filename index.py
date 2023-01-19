@@ -22,5 +22,4 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=os.environ.get('PORT', 80))
     heartbeatWorker = threading.Thread(target=heartbeater)
     heartbeatWorker.start()
-    print("HEARTBEAT CHECK")
-    print(heartbeatWorker.is_alive())
+    heartbeatWorker.join()
