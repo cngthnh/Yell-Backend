@@ -74,10 +74,14 @@ app.config['DEBUG'] = True
 db = SQLAlchemy(app)
 
 def heartbeater():
-    for i in range(HEARTBEAT_RETRIES):
-        response = requests.post(os.environ['SERVICE_DISCOVERY_URL'], data = {"name": "Yell API Service", "url": os.environ['YELL_MAIN_URL']})
-        if response.ok:
-            break
+    try:
+        for i in range(HEARTBEAT_RETRIES):
+            response = requests.post(os.environ['SERVICE_DISCOVERY_URL'], data = {"name": "Yell API Service", "url": os.environ['YELL_MAIN_URL']})
+            print(response)
+            if response.ok:
+                break
+    except Exception as e:
+        print(e)
     time.sleep(HEARTBEAT_INTERVAL)
 
 with app.app_context():
