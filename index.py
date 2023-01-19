@@ -18,6 +18,19 @@ app.register_blueprint(transaction_bp, url_prefix=TRANSACTIONS_ENDPOINT)
 app.register_blueprint(home_bp, url_prefix=HOME_ENDPOINT)
 app.register_blueprint(notif_bp, url_prefix=NOTIF_ENDPOINT)
 
+def heartbeater():
+    try:
+        while (True):
+            for _ in range(HEARTBEAT_RETRIES):
+                response = requests.post(os.environ['SERVICE_DISCOVERY_URL'], 
+                    data = json.dumps({"name": "Yell API Service", "url": os.environ['YELL_MAIN_URL']}), 
+                    headers = {'content-type': 'application/json'})
+                if response.ok:
+                    break
+            time.sleep(HEARTBEAT_INTERVAL)
+    except Exception as e:
+        print(e)
+
 if __name__ == '__main__':
     heartbeatWorker = threading.Thread(target=heartbeater)
     heartbeatWorker.start()

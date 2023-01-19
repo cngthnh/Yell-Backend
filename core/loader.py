@@ -74,18 +74,5 @@ app.config['DEBUG'] = True
 # init DB
 db = SQLAlchemy(app)
 
-def heartbeater():
-    try:
-        while (True):
-            for _ in range(HEARTBEAT_RETRIES):
-                response = requests.post(os.environ['SERVICE_DISCOVERY_URL'], 
-                    data = json.dumps({"name": "Yell API Service", "url": os.environ['YELL_MAIN_URL']}), 
-                    headers = {'content-type': 'application/json'})
-                if response.ok:
-                    break
-            time.sleep(HEARTBEAT_INTERVAL)
-    except Exception as e:
-        print(e)
-
 with app.app_context():
     mail.init_app(app)
