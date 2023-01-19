@@ -19,7 +19,7 @@ app.register_blueprint(home_bp, url_prefix=HOME_ENDPOINT)
 app.register_blueprint(notif_bp, url_prefix=NOTIF_ENDPOINT)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=os.environ.get('PORT', 80))
     heartbeatWorker = threading.Thread(target=heartbeater)
     heartbeatWorker.start()
+    app.run(host='0.0.0.0', port=os.environ.get('PORT', 80))
     heartbeatWorker.join()
