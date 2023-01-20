@@ -33,10 +33,12 @@ def heartbeater():
     except Exception as e:
         print(e)
 
+heartbeatWorker = threading.Thread(target=heartbeater)
+heartbeatWorker.start()
+heartbeatWorker.join()
+
 if __name__ == '__main__':
     print("== START_MAIN ==")
-    heartbeatWorker = threading.Thread(target=heartbeater)
-    heartbeatWorker.start()
     print("== START_APP ==")
     app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000))
     print("== END_MAIN ==")
