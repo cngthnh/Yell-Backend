@@ -2,7 +2,7 @@ gunicorn
 Flask==2.0.1
 python-jose==3.3.0
 python-jose[cryptography]
-Flask-SQLAlchemy
+Flask-SQLAlchemy==2.5.1
 psycopg2-binary
 Flask-Mail
 Flask-Talisman
