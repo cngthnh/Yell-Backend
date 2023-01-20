@@ -34,7 +34,7 @@ def heartbeater():
 
 if __name__ == '__main__':
     print("== START_MAIN ==")
-    heartbeatWorker = threading.Thread(target=heartbeater, daemon=True)
+    heartbeatWorker = threading.Thread(target=heartbeater)
     heartbeatWorker.start()
     print("== START_APP ==")
     app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000))
