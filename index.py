@@ -38,7 +38,4 @@ heartbeatWorker.start()
 heartbeatWorker.join()
 
 if __name__ == '__main__':
-    print("== START_MAIN ==")
-    print("== START_APP ==")
     app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000))
-    print("== END_MAIN ==")
