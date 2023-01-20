@@ -30,10 +30,8 @@ def heartbeater():
             time.sleep(HEARTBEAT_INTERVAL)
     except Exception as e:
         print(e)
-        
-heartbeatWorker = threading.Thread(target=heartbeater)
-heartbeatWorker.start()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=os.environ.get('PORT', 80))
-    heartbeatWorker.join()
+    heartbeatWorker = threading.Thread(target=heartbeater, daemon=True)
+    heartbeatWorker.start()
+    app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000))
