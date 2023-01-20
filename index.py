@@ -25,7 +25,8 @@ def heartbeater():
                 response = requests.post(os.environ['SERVICE_DISCOVERY_URL'], 
                     data = json.dumps({"name": "Yell API Service", "url": os.environ['YELL_MAIN_URL']}), 
                     headers = {'content-type': 'application/json'})
-                print(response)
+                print("== RESPONSE ==")
+                print(response.status_code)
                 if response.ok:
                     break
             time.sleep(HEARTBEAT_INTERVAL)
@@ -34,9 +35,8 @@ def heartbeater():
 
 if __name__ == '__main__':
     print("== START_MAIN ==")
-    with app.app_context():
-        heartbeatWorker = threading.Thread(target=heartbeater)
-        heartbeatWorker.start()
+    heartbeatWorker = threading.Thread(target=heartbeater)
+    heartbeatWorker.start()
     print("== START_APP ==")
     app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000))
     print("== END_MAIN ==")

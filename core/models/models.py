@@ -3,7 +3,7 @@ import sys
 
 from ..utils.utils import generateCode
 from ..utils.definitions import *
-from ..loader import db
+from ..loader import db, app
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
@@ -346,10 +346,11 @@ class VerificationCode(db.Model):
         self.code = generateCode()
         self.updated_at = datetime.utcnow()
 
-try:
-    db.create_all()
-    db.session.commit()
-except Exception as e:
-    print(str(e))
-    sys.stdout.flush()
-    db.session.rollback()
+with app.app_context():
+    try:
+        db.create_all()
+        db.session.commit()
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
+        db.session.rollback()
