@@ -62,6 +62,7 @@ Talisman(app)
 # init SQL database and email connection
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres', 'postgresql+psycopg2')
 app.config['SECRET_KEY'] = secrets.token_hex(16)
+app.config['SQLALCHEMY_POOL_SIZE'] = 3
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = 'smtp.yandex.com'
 app.config['MAIL_PORT'] = 465
