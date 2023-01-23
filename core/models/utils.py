@@ -8,6 +8,10 @@ def checkAccount(uid, hash):
         return False
     return True
 
+def cleanupConnection(session):
+    session.close()
+    db.get_engine(app).dispose()
+
 def changeAccountStatus(uid, email, codeRecord = None):
     account = db.session.query(UserAccount).filter_by(id = uid, email = email).first()
     if account.confirmed:

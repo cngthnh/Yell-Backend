@@ -6,5 +6,5 @@ python-jose[cryptography]
 psycopg2-binary
 Flask-Mail
 Flask-Talisman
-boto3==1.20.26
 requests
+deta

@@ -7,7 +7,8 @@ from ..loader import db, app
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
-from ..utils.s3 import S3Handler
+from ..utils.storage import StorageHandler
+import json
 
 class DashboardPermission(db.Model):
     __tablename__ = 'dashboard_permission'
@@ -185,7 +186,7 @@ class Task(db.Model):
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     labels = db.Column(db.String, nullable=True)
-    files = db.Column(db.String, nullable=True)
+    files = db.Column(db.String, nullable=False, default = '{}')
     dashboard_id = db.Column(UUID(as_uuid=True), db.ForeignKey('dashboard.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -215,13 +216,7 @@ class Task(db.Model):
         for task in self.children:
             subtaskDetails.append(task.dict())
         
-        s3 = S3Handler()
-
-        files = []
         thisId = str(self.id)
-        if self.files is not None:
-            for file in self.files.split(','):
-                files.append({API_FILE_NAME: file, API_URL: s3.getLink(thisId, file)})
 
         result = {
             API_NAME: self.name,
@@ -237,7 +232,7 @@ class Task(db.Model):
             API_LABELS: self.labels,
             API_CREATED_AT: self.created_at.isoformat(),
             API_UPDATED_AT: self.updated_at.isoformat(),
-            API_FILES: files,
+            API_FILES: json.loads(self.files),
             API_PARENT_ID: str(self.parent_id) if self.parent_id is not None else None,
         }
         return result

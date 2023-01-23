@@ -8,6 +8,8 @@ from flask_talisman import Talisman
 import requests
 import time
 import json
+from sqlalchemy.pool import NullPool
+from deta import App
 
 def loadKeys():
     try:
@@ -53,7 +55,7 @@ def loadConfigs():
     loadStorage()
 
 # init Flask
-app = Flask(__name__)
+app = App(Flask(__name__))
 Talisman(app)
 
 # load env
@@ -62,7 +64,11 @@ Talisman(app)
 # init SQL database and email connection
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres', 'postgresql+psycopg2')
 app.config['SECRET_KEY'] = secrets.token_hex(16)
-app.config['SQLALCHEMY_POOL_SIZE'] = 3
+app.config['SQLALCHEMY_POOL_SIZE'] = None
+app.config['SQLALCHEMY_POOL_TIMEOUT'] = None
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'poolclass': NullPool
+}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = 'smtp.yandex.com'
 app.config['MAIL_PORT'] = 465

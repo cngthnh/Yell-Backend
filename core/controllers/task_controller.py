@@ -7,7 +7,7 @@ from ..utils.email import *
 from ..models.utils import *
 from .auth_controller import tokenRequired
 from ..views.message_view import getMessage
-from ..utils.s3 import S3Handler
+from ..utils.storage import StorageHandler
 import json
 
 @tokenRequired
@@ -41,23 +41,24 @@ def createTask(uid):
 
     task.id = uuid.uuid4()
 
-    s3 = S3Handler()
+    storage = StorageHandler()
+
+    _files = {}
 
     for k, v in zip(files.keys(), files.values()):
-        fileName = TEMP_FOLDER + uuid.uuid4().hex
-        v.save(fileName)
-        if (os.path.getsize(fileName) > MAX_FILE_SIZE):
+        if (k is None or k == ''):
+            return getMessage(message=INVALID_DATA_MESSAGE), 400
+        mime = v.content_type
+        file_length = v.seek(0, os.SEEK_END)
+        v.seek(0, os.SEEK_SET)
+        if (file_length > MAX_FILE_SIZE):
             return getMessage(message=FILE_TOO_LARGE_MESSAGE), 400
-        s3.uploadAsync(fileName, str(task.id), k)
-        if (task.files is not None):
-            if (k not in task.files.split(',')):
-                if (task.files != ''):
-                    task.files += ',' + k
-                else:
-                    task.files += k
-        else:
-            task.files = k
+        storage.upload(v, str(task.id), k)
+        if (_files is not None):
+            if (k not in _files.keys()):
+                _files[k] = {"mime": mime, "url": storage.getLink(TASK_ATTACHMENT_FOLDER, str(task.id), k), "size": file_length}
 
+    task.files = json.dumps(_files)
     fields = data.keys()
     try:
         if (API_STATUS in fields and data[API_STATUS] is not None):
@@ -120,22 +121,24 @@ def updateTask(uid):
     if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return getMessage(message=FORBIDDEN_MESSAGE), 403
 
-    s3 = S3Handler()
+    storage = StorageHandler()
+
+    _files = json.loads(task.files)
 
     for k, v in zip(files.keys(), files.values()):
-        fileName = TEMP_FOLDER + uuid.uuid4().hex
-        v.save(fileName)
-        if (os.path.getsize(fileName) > MAX_FILE_SIZE):
+        if (k is None or k == ''):
+            return getMessage(message=INVALID_DATA_MESSAGE), 400
+        mime = v.content_type
+        file_length = v.seek(0, os.SEEK_END)
+        v.seek(0, os.SEEK_SET)
+        if (file_length > MAX_FILE_SIZE):
             return getMessage(message=FILE_TOO_LARGE_MESSAGE), 400
-        s3.uploadAsync(fileName, str(task.id), k)
-        if (task.files is not None):
-            if (k not in task.files.split(',')):
-                if (task.files != ''):
-                    task.files += ',' + k
-                else:
-                    task.files += k
-        else:
-            task.files = k
+        storage.upload(v, str(task.id), k)
+        if (_files is not None):
+            if (k not in _files.keys()):
+                _files[k] = {"mime": mime, "url": storage.getLink(TASK_ATTACHMENT_FOLDER, str(task.id), k), "size": file_length}
+    
+    task.files = json.dumps(_files)
 
     fields = data.keys()
 
@@ -238,7 +241,7 @@ def deleteTask(uid):
     if (EDIT_PERMISSION not in DASHBOARD_PERMISSION[permissionCheck.role]):
         return getMessage(message=FORBIDDEN_MESSAGE), 403
 
-    s3 = S3Handler()
+    s3 = StorageHandler()
     
     if task.files is not None:
         for file in task.files.split(','):

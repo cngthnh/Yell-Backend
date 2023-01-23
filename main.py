@@ -7,6 +7,7 @@ from core.routes.budget_bp import budget_bp
 from core.routes.transaction_bp import transaction_bp
 from core.routes.home_bp import home_bp
 from core.routes.notif_bp import notif_bp
+from core.routes.static_bp import static_bp
 import threading
 
 app.register_blueprint(auth_bp, url_prefix=AUTH_ENDPOINT)
@@ -17,24 +18,19 @@ app.register_blueprint(budget_bp, url_prefix=BUDGETS_ENDPOINT)
 app.register_blueprint(transaction_bp, url_prefix=TRANSACTIONS_ENDPOINT)
 app.register_blueprint(home_bp, url_prefix=HOME_ENDPOINT)
 app.register_blueprint(notif_bp, url_prefix=NOTIF_ENDPOINT)
+app.register_blueprint(static_bp, url_prefix=STATIC_ENDPOINT)
 
-def heartbeater():
+@app.lib.cron()
+def heartbeater(event):
+    print(event)
     try:
         while (True):
-            for _ in range(HEARTBEAT_RETRIES):
-                response = requests.post(os.environ['SERVICE_DISCOVERY_URL'], 
-                    data = json.dumps({"name": "Yell API Service", "url": os.environ['YELL_MAIN_URL']}), 
-                    headers = {'content-type': 'application/json'})
-                print("== RESPONSE ==")
-                print(response.status_code)
-                if response.ok:
-                    break
+            response = requests.post(os.environ['SERVICE_DISCOVERY_URL'], 
+                data = json.dumps({"name": "Yell API Service", "url": os.environ['YELL_MAIN_URL']}), 
+                headers = {'content-type': 'application/json'})
             time.sleep(HEARTBEAT_INTERVAL)
     except Exception as e:
         print(e)
-
-heartbeatWorker = threading.Thread(target=heartbeater)
-heartbeatWorker.start()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000))
